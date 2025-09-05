@@ -9,6 +9,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import os
 
+def importar_modelos_alchemy():
+    import alpespartners.modulos.programas.infraestructura.dto
+
 def create_app(configuracion={}):
     import logging
     logging.basicConfig(level=logging.INFO)
@@ -31,6 +34,8 @@ def create_app(configuracion={}):
     try:
         from alpespartners.config.db import db, init_db
         init_db(app)
+        importar_modelos_alchemy()
+        
         with app.app_context():
             db.create_all()
         logger.info("Base de datos inicializada correctamente.")
