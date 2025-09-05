@@ -10,6 +10,10 @@ __pycache__/
 venv/
 ENV/
 
+# uv
+.uv/
+uv.lock
+
 # Flask instance/config
 instance/
 *.db
