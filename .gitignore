@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Flask instance/config
+instance/
+*.db
+*.sqlite3
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage/test
+.coverage
+htmlcov/
+.tox/
+pytest_cache/
+
+# Build
+build/
+dist/
+*.egg-info/
