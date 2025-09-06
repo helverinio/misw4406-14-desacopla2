@@ -4,6 +4,8 @@ from alpespartners.modulos.programas.dominio.entidades import Programa
 from alpespartners.modulos.programas.dominio.fabricas import FabricaProgramas
 from alpespartners.modulos.programas.dominio.repositorios import RepositorioProgramas
 from .mapeadores import MapeadorPrograma
+from .dto import Programa as ProgramaDTO
+from uuid import UUID
 
 class RepositorioProgramasPostgress(RepositorioProgramas):
 
@@ -19,9 +21,6 @@ class RepositorioProgramasPostgress(RepositorioProgramas):
         db.session.add(programa_dto)
         db.session.commit()
     
-    def obtener_por_id(self, id) -> Programa:
-        programa_dto = db.session.query(Programa).filter_by(id=id).first()
-        if not programa_dto:
-            return None
-        programa = self.fabrica_programas.crear_objeto(programa_dto, MapeadorPrograma())
-        return programa
+    def obtener_por_id(self, id: UUID) -> Programa:
+        programa_dto = db.session.query(ProgramaDTO).filter_by(programa_id=str(id)).one()
+        return self.fabrica_programas.crear_objeto(programa_dto, MapeadorPrograma())

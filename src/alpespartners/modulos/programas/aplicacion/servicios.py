@@ -31,3 +31,7 @@ class ServicioPrograma(Servicio):
         repositorio.agregar(programa)
 
         return self.fabrica_programas.crear_objeto(programa, MapeadorPrograma())
+    
+    def obtener_programa_por_id(self, id: str) -> ProgramaDTO:
+        repositorio = self.fabrica_repositorio.crear_objeto(RepositorioProgramas)
+        return repositorio.obtener_por_id(id).__dict__

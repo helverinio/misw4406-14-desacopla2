@@ -32,7 +32,11 @@ def crear_programa():
         return Response(json.dumps(dict(error=str(e))), status=400, mimetype='application/json')
         
 
-@bp.route("", methods=["GET"])
-def obtener_programa():
-    # TODO GET
-    return {"mensaje": "Programa obtenido correctamente"}
+@bp.route("/<id>", methods=["GET"])
+def obtener_programa(id=None):
+    if id:
+        sr = ServicioPrograma()
+
+        return sr.obtener_programa_por_id(id)
+    else:
+        return [{'message': 'GET!'}] 

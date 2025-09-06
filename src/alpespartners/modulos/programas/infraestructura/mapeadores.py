@@ -1,6 +1,6 @@
 
 
-from alpespartners.modulos.programas.dominio.entidades import Programa
+from alpespartners.modulos.programas.dominio.entidades import Afiliacion, Programa
 from alpespartners.modulos.programas.dominio.objetos_valor import Terminos, Vigencia
 from alpespartners.seedwork.dominio.repositorio import Mapeador
 from .dto import Programa as ProgramaDTO
@@ -20,6 +20,18 @@ class MapeadorPrograma(Mapeador):
         dto.fecha_alta = afiliacion.fecha_alta
         dto.fecha_baja = afiliacion.fecha_baja
         return [dto]
+
+    def _procesar_afiliacion_dto(self, afiliaciones_dto: list) -> list[Afiliacion]:
+        afiliaciones = list()
+        for afiliacion_dto in afiliaciones_dto:
+            afiliacion = Afiliacion(
+                afiliado_id=afiliacion_dto.afiliado_id,
+                estado=afiliacion_dto.estado,
+                fecha_alta=afiliacion_dto.fecha_alta,
+                fecha_baja=afiliacion_dto.fecha_baja
+            )
+            afiliaciones.append(afiliacion)
+        return afiliaciones
 
     def obtener_tipo(self) -> type:
         return Programa.__class__
@@ -61,7 +73,12 @@ class MapeadorPrograma(Mapeador):
 
     def dto_a_entidad(self, dto: ProgramaDTO) -> Programa:
         vigencia: Vigencia = Vigencia(dto.vigencia_inicio, dto.vigencia_fin)
-        terminos: Terminos = Terminos(dto.term_moneda, dto.term_tarifa_base, dto.term_tope)
-        programa = Programa(vigencia=vigencia, terminos=terminos)
-        # TODO completar con los demas campos
+        terminos: Terminos = Terminos(dto.term_modelo, dto.term_moneda, dto.term_tarifa_base, dto.term_tope)
+        programa = Programa(id=dto.programa_id,estado=dto.estado,tipo=dto.tipo,brand_id=dto.brand_id,vigencia=vigencia, terminos=terminos)
+        
+        programa.afiliaciones = list()
+
+        afiliaciones_dto: list[AfiliacionDTO] = dto.afiliaciones
+
+        programa.afiliaciones.extend(self._procesar_afiliacion_dto(afiliaciones_dto))
         return programa
