@@ -1,5 +1,11 @@
-from .dto import ProgramaDTO, AfiliacionDTO
+from alpespartners.modulos.programas.dominio.entidades import Afiliacion, Programa
+from alpespartners.modulos.programas.dominio.objetos_valor import Terminos, Vigencia
+from .dto import ProgramaDTO, AfiliacionDTO, TerminosDTO, VigenciaDTO
 from alpespartners.seedwork.aplicacion.dto import Mapeador as AppMap
+from alpespartners.seedwork.dominio.repositorio import Mapeador as RepMap
+import logging
+
+logging = logging.getLogger(__name__)
 
 class MapeadorProgramaDTOJson(AppMap):
     def _procesar_afiliaciones(self, afiliacion:dict) -> AfiliacionDTO:
@@ -14,17 +20,20 @@ class MapeadorProgramaDTOJson(AppMap):
         estado = externo.get("estado", "inactivo")
         tipo = externo.get("tipo", "basico")
         brand_id = externo.get("brand_id", "")
-        vigencia_inicio = externo.get("vigencia_inicio", "")
-        vigencia_fin = externo.get("vigencia_fin", "")
-        term_modelo = externo.get("term_modelo", "mensual")
-        term_moneda = externo.get("term_moneda", "USD")
-        term_tarifa_base = externo.get("term_tarifa_base", 0.0)
-        term_tope = externo.get("term_tope", 0.0)
+        vigencia = VigenciaDTO(
+            inicio=externo.get("vigencia_inicio", ""),
+            fin=externo.get("vigencia_fin", "")
+        )
+        terminos = TerminosDTO(
+            modelo=externo.get("term_modelo", "cpa"),
+            moneda=externo.get("term_moneda", "USD"),
+            tarifa_base=externo.get("term_tarifa_base", 0.0),
+            tope=externo.get("term_tope", 0.0)
+        )
 
         programa_dto = ProgramaDTO(estado=estado, tipo=tipo, brand_id=brand_id,
-                                   vigencia_inicio=vigencia_inicio, vigencia_fin=vigencia_fin,
-                                   term_modelo=term_modelo, term_moneda=term_moneda,
-                                   term_tarifa_base=term_tarifa_base, term_tope=term_tope)
+                                   vigencia=vigencia,
+                                   terminos=terminos)
 
         for afiliacion in externo.get("afiliaciones", list()):
             programa_dto.afiliaciones.append(self._procesar_afiliaciones(afiliacion))
@@ -33,3 +42,52 @@ class MapeadorProgramaDTOJson(AppMap):
     
     def dto_a_externo(self, dto:ProgramaDTO) -> dict:
         return dto.__dict__
+
+
+class MapeadorPrograma(RepMap):
+    _FORMATO_FECHA = '%Y-%m-%dT%H:%M:%SZ'
+
+    def _procesar_vigencia(self, vigencia_dto: VigenciaDTO) -> Vigencia:
+        return Vigencia(
+            inicio=vigencia_dto.inicio,
+            fin=vigencia_dto.fin
+        )
+
+    def _procesar_terminos(self, terminos_dto: TerminosDTO) -> Terminos:
+        return Terminos(
+            modelo=terminos_dto.modelo,
+            moneda=terminos_dto.moneda,
+            tarifa_base=terminos_dto.tarifa_base,
+            tope=terminos_dto.tope
+        )
+    
+    def _procesar_afiliacion(self, afiliacion_dto: AfiliacionDTO) -> any:
+        return Afiliacion(
+            afiliado_id=afiliacion_dto.afiliado_id,
+            estado=afiliacion_dto.estado,
+            fecha_alta=afiliacion_dto.fecha_alta,
+            fecha_baja=afiliacion_dto.fecha_baja
+        )
+    
+    def obtener_tipo(self) -> type:
+        return Programa.__class__
+    
+    def entidad_a_dto(self, entidad: Programa) -> ProgramaDTO:
+            
+        fecha_creacion = entidad.fecha_creacion.strftime(self._FORMATO_FECHA)
+        fecha_actualizacion = entidad.fecha_actualizacion.strftime(self._FORMATO_FECHA)
+        _id = str(entidad.id)
+
+        return ProgramaDTO(fecha_creacion, fecha_actualizacion, _id, list())
+
+    def dto_a_entidad(self, dto: ProgramaDTO) -> Programa:
+        logging.info(f"Convirtiendo DTO a entidad: {dto}")
+        programa = Programa(vigencia=self._procesar_vigencia(dto.vigencia), terminos=self._procesar_terminos(dto.terminos), brand_id=dto.brand_id)
+
+        programa.afiliaciones = list()
+
+        afiliaciones_dto: list[AfiliacionDTO] = dto.afiliaciones
+        for afiliacion_dto in afiliaciones_dto:
+            programa.afiliaciones.append(self._procesar_afiliacion(afiliacion_dto))
+
+        return programa

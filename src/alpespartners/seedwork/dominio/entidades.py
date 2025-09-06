@@ -15,7 +15,7 @@ class Entidad:
     fecha_actualizacion: datetime = field(default=datetime.now())
 
     @classmethod
-    def siguiente_id(cls) -> uuid.UUID:
+    def siguiente_id(self) -> uuid.UUID:
         return uuid.uuid4()
     
     @property
@@ -26,7 +26,7 @@ class Entidad:
     def id(self, valor: uuid.UUID):
         if not IdEntidadEsInmutable(self).es_valido():
             raise IdDebeSerInmutableExcepcion()
-        self.id = self.siguiente_id()
+        self._id = self.siguiente_id()
 
 @dataclass
 class AgregacionRaiz(Entidad, ValidarReglasMixin):

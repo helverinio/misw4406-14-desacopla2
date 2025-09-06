@@ -2,6 +2,7 @@ import json
 import logging
 
 from alpespartners.modulos.programas.aplicacion.mapeadores import MapeadorProgramaDTOJson
+from alpespartners.modulos.programas.aplicacion.servicios import ServicioPrograma
 from alpespartners.seedwork.dominio.excepciones import ExcepcionDominio
 import alpespartners.seedwork.presentacion.api as api
 
@@ -22,9 +23,10 @@ def crear_programa():
 
         logger.info(f"Programa DTO: {programa_dto}")
 
-        
+        sr = ServicioPrograma()
+        dto_final = sr.crear_programa(programa_dto)
 
-        return Response('OK', status=201, mimetype='application/json')
+        return map_programa.dto_a_externo(dto_final)
     except ExcepcionDominio as e:
         logger.error(f"Error al crear programa: {e}")
         return Response(json.dumps(dict(error=str(e))), status=400, mimetype='application/json')
@@ -32,4 +34,5 @@ def crear_programa():
 
 @bp.route("", methods=["GET"])
 def obtener_programa():
+    # TODO GET
     return {"mensaje": "Programa obtenido correctamente"}

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from .mixins import ValidarReglasMixin
+from .repositorio import Mapeador
 
 
 class Fabrica(ABC, ValidarReglasMixin):

@@ -12,6 +12,17 @@ class AfiliacionDTO(DTO):
     creado_en: str = field(default_factory=str)
     actualizado_en: str = field(default_factory=str)
 
+@dataclass(frozen=True)
+class VigenciaDTO(DTO):
+    inicio: str = field(default_factory=str)
+    fin: str = field(default_factory=str)
+
+@dataclass(frozen=True)
+class TerminosDTO(DTO):
+    modelo: str = field(default_factory=str)
+    moneda: str = field(default_factory=str)
+    tarifa_base: float = field(default_factory=float)
+    tope: float = field(default_factory=float)
 
 @dataclass(frozen=True)
 class ProgramaDTO(DTO):
@@ -19,12 +30,8 @@ class ProgramaDTO(DTO):
     estado: str = field(default_factory=str)
     tipo: str = field(default_factory=str)
     brand_id: str = field(default_factory=str)
-    vigencia_inicio: str = field(default_factory=str)
-    vigencia_fin: str = field(default_factory=str)
-    term_modelo: str = field(default_factory=str)
-    term_moneda: str = field(default_factory=str)
-    term_tarifa_base: float = field(default_factory=float)
-    term_tope: float = field(default_factory=float)
+    vigencia: VigenciaDTO = field(default_factory=VigenciaDTO)
+    terminos: TerminosDTO = field(default_factory=TerminosDTO)
     creado_en: str = field(default_factory=str)
     modificado_en: str = field(default_factory=str)
     afiliaciones: list[AfiliacionDTO] = field(default_factory=list)
