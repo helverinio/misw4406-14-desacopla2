@@ -18,14 +18,18 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app
 
 # Copy project files
-COPY pyproject.toml uv.lock README.md ./
-COPY src/ ./src/
+COPY pyproject.toml ./
+COPY uv.lock ./
+COPY README.md ./
 
 # Install dependencies using uv
 RUN uv sync --frozen --no-dev
+
+# Copy source code
+COPY src/ ./src/
 
 # Expose port
 EXPOSE 5000
 
 # Run the application
-CMD ["uv", "run", "flask", "--app", "alpespartners.api:create_app", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["uv", "run", "flask", "--app", "src.alpespartners.api:create_app", "run", "--host=0.0.0.0", "--port=5000"]

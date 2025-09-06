@@ -38,6 +38,9 @@ dev-dependencies = [
 line-length = 88
 target-version = ['py38']
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/alpespartners"]
+
 [tool.mypy]
 python_version = "3.8"
 warn_return_any = true
