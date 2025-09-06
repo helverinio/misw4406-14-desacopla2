@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alpespartners"
+version = "0.1.0"
+description = "AlpesPartners"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "flask[async]==3.1.1",
+    "Flask-SQLAlchemy==3.1.1",
+    "flask-swagger==0.2.14",
+    "psycopg2-binary",
+    "pulsar-client>=3.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-flask",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-flask>=1.2.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

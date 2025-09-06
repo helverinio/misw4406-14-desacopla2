@@ -3,13 +3,21 @@ proyecto analisis y modelado de datos
 
 # alpesPartners
 ## Sin Docker
-### Instalar dependencias
+### Instalar dependencias con uv
 ```bash
-pip install -r src/alpespartners/requirements.txt
+# Instalar todas las dependencias
+uv sync
+
+# O instalar solo las dependencias de producción
+uv sync --no-dev
 ```
 
 ### Ejecutar alpespartners.api
 ```bash
+# Con uv (recomendado)
+uv run flask --app alpespartners.api run
+
+# O tradicionalmente
 flask --app alpespartners.api run
 ```
 
@@ -19,10 +27,34 @@ $env:PYTHONPATH="E:\miso\8monoliticas\misw4406-14-desacopla2\src"
 ```
 e intentar iniciar nuevamente
 
+### Comandos útiles de uv
+```bash
+# Agregar una nueva dependencia
+uv add <package-name>
+
+# Agregar una dependencia de desarrollo
+uv add --dev <package-name>
+
+# Actualizar dependencias
+uv lock --upgrade
+
+# Ejecutar comandos en el entorno virtual
+uv run <command>
+```
+
 # Ejecutar la aplicación usando Docker-compose
 ```bash
 docker-compose up --build
 ```
+
+## Servicios disponibles
+
+- **Web App**: http://localhost:5000 - Aplicación Flask principal
+- **PostgreSQL**: localhost:5433 - Base de datos
+- **Apache Pulsar**: 
+  - Service URL: pulsar://localhost:6650
+  - Admin URL: http://localhost:8080
+- **Pulsar Manager**: http://localhost:9527 - Interfaz web para administrar Pulsar
 
 
 # Requerimientos
