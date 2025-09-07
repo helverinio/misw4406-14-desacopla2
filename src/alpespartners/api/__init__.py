@@ -12,6 +12,14 @@ import os
 def importar_modelos_alchemy():
     import alpespartners.modulos.programas.infraestructura.dto
 
+def comenzar_consumidor():
+    import threading
+    import alpespartners.modulos.notificaciones.infraestructura.consumidores as notificaciones
+
+    # Suscripción a eventos
+    threading.Thread(target=notificaciones.suscribirse_a_eventos).start()
+
+
 def create_app(configuracion={}):
     import logging
     logging.basicConfig(level=logging.INFO)
@@ -38,6 +46,8 @@ def create_app(configuracion={}):
         
         with app.app_context():
             db.create_all()
+            comenzar_consumidor()
+
         logger.info("Base de datos inicializada correctamente.")
     except Exception as e:
         logger.error(f"Error al inicializar la base de datos: {e}")
