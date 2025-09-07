@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from alpespartners.modulos.programas.dominio.repositorios import RepositorioProgramas
+from alpespartners.modulos.programas.infraestructura.despachadores import Despachador
 from alpespartners.seedwork.dominio.fabricas import Fabrica
 from alpespartners.seedwork.dominio.repositorio import Repositorio
 
