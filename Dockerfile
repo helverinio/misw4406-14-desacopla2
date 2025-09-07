@@ -19,7 +19,9 @@ WORKDIR /app
 
 # Copy project files
 COPY pyproject.toml ./
-COPY uv.lock ./
+#COPY uv.lock ./
+# (Si no traes uv.lock) créalo dentro del contenedor:
+RUN uv lock
 COPY README.md ./
 
 # Install dependencies using uv

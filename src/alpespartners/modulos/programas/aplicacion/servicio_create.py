@@ -10,7 +10,7 @@ from alpespartners.modulos.programas.infraestructura.repositorios import Reposit
 from .dto import ProgramaDTO
 from .mapeadores import MapeadorPrograma
 
-class ServicioPrograma(Servicio):
+class ServicioProgramaCreate(Servicio):
 
     def __init__(self):
         self._fabrica_repositorios: FabricaRepositorio = FabricaRepositorio()
@@ -31,7 +31,3 @@ class ServicioPrograma(Servicio):
         repositorio.agregar(programa)
 
         return self.fabrica_programas.crear_objeto(programa, MapeadorPrograma())
-    
-    def obtener_programa_por_id(self, id: str) -> ProgramaDTO:
-        repositorio = self.fabrica_repositorio.crear_objeto(RepositorioProgramas)
-        return repositorio.obtener_por_id(id).__dict__

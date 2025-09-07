@@ -2,7 +2,8 @@ import json
 import logging
 
 from alpespartners.modulos.programas.aplicacion.mapeadores import MapeadorProgramaDTOJson
-from alpespartners.modulos.programas.aplicacion.servicios import ServicioPrograma
+from alpespartners.modulos.programas.aplicacion.servicio_create import ServicioProgramaCreate
+from alpespartners.modulos.programas.aplicacion.servicio_query import ServicioProgramaQuery
 from alpespartners.seedwork.dominio.excepciones import ExcepcionDominio
 import alpespartners.seedwork.presentacion.api as api
 
@@ -23,7 +24,7 @@ def crear_programa():
 
         logger.info(f"Programa DTO: {programa_dto}")
 
-        sr = ServicioPrograma()
+        sr = ServicioProgramaCreate()
         dto_final = sr.crear_programa(programa_dto)
 
         return map_programa.dto_a_externo(dto_final)
@@ -35,7 +36,7 @@ def crear_programa():
 @bp.route("/<id>", methods=["GET"])
 def obtener_programa(id=None):
     if id:
-        sr = ServicioPrograma()
+        sr = ServicioProgramaQuery()
 
         return sr.obtener_programa_por_id(id)
     else:
