@@ -22,18 +22,11 @@ class Programa(AgregacionRaiz):
     terminos: ov.Terminos = field(default=None)
     afiliaciones: list[Afiliacion] = field(default_factory=list)
 
-    def crear_programa(
-        self,
-        estado: ov.ProgramaEstado,
-        tipo: ov.ProgramaTipo,
-        brand_id: str,
-        vigencia: ov.Vigencia,
-        terminos: ov.Terminos,
-    ):
-        self.estado = estado
-        self.tipo = tipo
-        self.brand_id = brand_id
-        self.vigencia = vigencia
-        self.terminos = terminos
+    def crear_programa(self, programa):
+        self.estado = programa.estado
+        self.tipo = programa.tipo
+        self.brand_id = programa.brand_id
+        self.vigencia = programa.vigencia
+        self.terminos = programa.terminos
 
-        self.agregar_evento(ProgramaCreado(id=self.id, estado=estado))
+        self.agregar_evento(ProgramaCreado(id=self.id, estado=self.estado))

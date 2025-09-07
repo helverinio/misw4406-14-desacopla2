@@ -1,7 +1,7 @@
 import pulsar
 from pulsar.schema import AvroSchema
 
-from alpespartners.seedwork.infrastructura.utils import broker_host
+from alpespartners.seedwork.infrastructura.utils import broker_url
 from alpespartners.modulos.programas.infraestructura.mapeadores import MapeadorEventoDominioPrograma
 
 class Despachador:
@@ -9,8 +9,8 @@ class Despachador:
         self.mapper = MapeadorEventoDominioPrograma()
 
     def _publicar_mensaje(self, mensaje, topico, schema):
-        cliente = pulsar.Client(f'pulsar://{broker_host()}:6650')
-        publicador = cliente.create_producer(topico, schema)
+        cliente = pulsar.Client(broker_url())
+        publicador = cliente.create_producer(topic=topico, schema=schema)
         publicador.send(mensaje)
         cliente.close()
 

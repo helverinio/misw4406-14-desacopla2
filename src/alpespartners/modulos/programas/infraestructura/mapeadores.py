@@ -132,7 +132,7 @@ class MapeadorEventoDominioPrograma(Mapeador):
             )
             evento_integracion = EventoProgramaCreado(id=str(evento.id))
             evento_integracion.id = str(evento.id)
-            evento_integracion.time = int(unix_time_millis(evento.fecha_creacion))
+            evento_integracion.time = int(unix_time_millis(evento.fecha_evento))
             evento_integracion.specversion = str(version)
             evento_integracion.type = "ReservaCreada"
             evento_integracion.datacontenttype = "AVRO"

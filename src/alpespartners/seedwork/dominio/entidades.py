@@ -7,6 +7,7 @@ from .reglas import IdEntidadEsInmutable
 from .excepciones import IdDebeSerInmutableExcepcion
 from .mixins import ValidarReglasMixin
 import uuid
+import logging
 
 
 @dataclass
@@ -35,6 +36,7 @@ class AgregacionRaiz(Entidad, ValidarReglasMixin):
     eventos: list[EventoDominio] = field(default_factory=list)
 
     def agregar_evento(self, evento: EventoDominio):
+        logging.info(f'Agregando evento: {evento}')
         self.eventos.append(evento)
     
     def limpiar_eventos(self):

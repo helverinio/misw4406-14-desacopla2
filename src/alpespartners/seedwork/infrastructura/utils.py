@@ -13,5 +13,5 @@ def unix_time_millis(dt):
 def millis_a_datetime(millis):
     return datetime.datetime.fromtimestamp(millis/1000.0)
 
-def broker_host():
-    return os.getenv('BROKER_HOST', default="localhost")
+def broker_url():
+    return os.getenv('BROKER_URL', 'pulsar://localhost:6650')
