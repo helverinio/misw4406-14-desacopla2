@@ -25,7 +25,6 @@ def suscribirse_a_eventos(app=None):
             mensaje = consumidor.receive()
             datos = mensaje.value().data
             logging.info(f"Evento recibido: {datos}")
-
             consumidor.acknowledge(mensaje)
 
         cliente.close()

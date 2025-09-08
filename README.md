@@ -47,6 +47,12 @@ uv run <command>
 docker-compose up --build
 ```
 
+# Crear carpeta de persistencia de estado de zookeper / bookkeeper y elevar privilegios
+```bash
+sudo mkdir -p ./data/zookeeper ./data/bookkeeper
+sudo chown -R 10000 data
+```
+
 ## Servicios disponibles
 
 - **Web App**: http://localhost:5000 - Aplicación Flask principal
@@ -58,15 +64,15 @@ docker-compose up --build
 
 
 # Requerimientos
-[ ]  La comunicación entre los diferentes módulos del servicio DEBE HACERSE por medio de eventos de dominio. Ello implica, que como mínimo su servicio debe contar con dos módulos.
+[x]  La comunicación entre los diferentes módulos del servicio DEBE HACERSE por medio de eventos de dominio. Ello implica, que como mínimo su servicio debe contar con dos módulos.
 [X] El servicio DEBE USAR un manejador de base de datos para la persistencia y consulta de los datos.
-[ ] Usa un patrón CQS para proveer el claro uso de comandos y eventos en el servicio.
-    [ ] tener un comando
-    [ ] una consulta
-    [ ] eventos relacionados a dicha transacción
+[x] Usa un patrón CQS para proveer el claro uso de comandos y eventos en el servicio.
+    [x] tener un comando
+    [x] una consulta
+    [x] eventos relacionados a dicha transacción
 [ ] Links al repositorio de acceso público 
 [ ] Link con un video 
-[ ] usar los patrones, tácticas y métodos aprendidos durante el curso
+[x] usar los patrones, tácticas y métodos aprendidos durante el curso
     [X] agregaciones
     [X] contextos acotados
     [X] inversión de dependencias
