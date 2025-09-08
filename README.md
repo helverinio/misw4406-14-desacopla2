@@ -60,8 +60,14 @@ sudo chown -R 10000 data
 - **Apache Pulsar**: 
   - Service URL: pulsar://localhost:6650
   - Admin URL: http://localhost:8080
-- **Pulsar Manager**: http://localhost:9527 - Interfaz web para administrar Pulsar
 
+## Colección de postman
+Nuestro servicio cuenta con una coleccion de postman donde puedes interactuar con los siguientes servicios:
+
+1. POST /programas
+2. GET /programas/:id
+
+()[/postman/AlpesPartners.postman_collection.json]
 
 # Requerimientos
 [x]  La comunicación entre los diferentes módulos del servicio DEBE HACERSE por medio de eventos de dominio. Ello implica, que como mínimo su servicio debe contar con dos módulos.
@@ -70,7 +76,7 @@ sudo chown -R 10000 data
     [x] tener un comando
     [x] una consulta
     [x] eventos relacionados a dicha transacción
-[ ] Links al repositorio de acceso público 
+[x] Links al repositorio de acceso público 
 [ ] Link con un video 
 [x] usar los patrones, tácticas y métodos aprendidos durante el curso
     [X] agregaciones
