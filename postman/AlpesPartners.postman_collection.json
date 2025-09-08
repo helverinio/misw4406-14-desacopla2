@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "c8554f14-85bc-45a6-a212-90633dd53b3d",
+		"name": "AlpesPartners",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43911642",
+		"_collection_link": "https://helvertwiesner.postman.co/workspace/Culturas-Gastronomicas~61d475be-254a-4229-9947-107ccc7370f1/collection/43911642-c8554f14-85bc-45a6-a212-90633dd53b3d?action=share&source=collection_link&creator=43911642"
+	},
+	"item": [
+		{
+			"name": "spec",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{alpespartners}}/spec",
+					"host": [
+						"{{alpespartners}}"
+					],
+					"path": [
+						"spec"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{alpespartners}}/health",
+					"host": [
+						"{{alpespartners}}"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get Programa",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{alpespartners}}/programas/65c89b76-97e2-45f0-a62c-13e8e68f0816",
+					"host": [
+						"{{alpespartners}}"
+					],
+					"path": [
+						"programas",
+						"65c89b76-97e2-45f0-a62c-13e8e68f0816"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post Programa",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"programa_id\": \"e7b8c2e2-9c2a-4f7e-bb8e-1a2b3c4d5e6f\",\r\n  \"estado\": \"ACTIVO\",\r\n  \"tipo\": \"AFILIADOS\",\r\n  \"brand_id\": \"a1b2c3d4-5678-1234-5678-abcdefabcdef\",\r\n  \"vigencia_inicio\": \"2025-09-01\",\r\n  \"vigencia_fin\": \"2026-09-01\",\r\n  \"term_modelo\": \"CPA\",\r\n  \"term_moneda\": \"COP\",\r\n  \"term_tarifa_base\": 1000.00,\r\n  \"term_tope\": 5000.00,\r\n  \"afiliaciones\": [\r\n    {\r\n      \"afiliacion_id\": \"f1e2d3c4-b5a6-7890-1234-abcdefabcdef\",\r\n      \"afiliado_id\": \"c1d2e3f4-5678-1234-5678-abcdefabcdef\",\r\n      \"estado\": \"ACTIVA\",\r\n      \"fecha_alta\": \"2025-09-05\",\r\n      \"fecha_baja\": null\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{alpespartners}}/programa",
+					"host": [
+						"{{alpespartners}}"
+					],
+					"path": [
+						"programa"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "alpespartners",
+			"value": "http://localhost:5000",
+			"type": "default"
+		}
+	]
+}
