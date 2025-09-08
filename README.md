@@ -67,7 +67,7 @@ Nuestro servicio cuenta con una coleccion de postman donde puedes interactuar co
 1. POST /programas
 2. GET /programas/:id
 
-[](/postman/AlpesPartners.postman_collection.json)
+[Link a postman](/postman/AlpesPartners.postman_collection.json)
 
 # Requerimientos
 [x]  La comunicación entre los diferentes módulos del servicio DEBE HACERSE por medio de eventos de dominio. Ello implica, que como mínimo su servicio debe contar con dos módulos.
