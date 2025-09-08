@@ -1,10 +1,8 @@
 import pulsar, _pulsar
 from pulsar.schema import *
-import uuid
-import time
 import logging
 import traceback
-import datetime
+
 
 from alpespartners.modulos.programas.infraestructura.schema.v1.eventos import (
     EventoProgramaCreado,
@@ -26,7 +24,7 @@ def suscribirse_a_eventos(app=None):
         while True:
             mensaje = consumidor.receive()
             datos = mensaje.value().data
-            print(f"Evento recibido: {datos}")
+            logging.info(f"Evento recibido: {datos}")
 
             consumidor.acknowledge(mensaje)
 

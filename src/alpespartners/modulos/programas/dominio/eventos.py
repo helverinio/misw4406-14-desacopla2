@@ -8,5 +8,6 @@ class EventoPrograma(EventoDominio):
 
 @dataclass
 class ProgramaCreado(EventoPrograma):
-    id_programa: uuid.UUID = None
+    programa_id: uuid.UUID = None
     estado: str = None
+    afiliaciones: list[dict] = None

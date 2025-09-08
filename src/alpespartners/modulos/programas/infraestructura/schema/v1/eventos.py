@@ -3,12 +3,17 @@ from alpespartners.seedwork.infrastructura.schema.v1.eventos import EventoIntegr
 from alpespartners.seedwork.infrastructura.utils import time_millis
 import uuid
 
+class AfiliacionPayload(Record):
+    afiliado_id = String()
+    
 class ProgramaCreadoPayload(Record):
-    id_programa = String()
+    programa_id = String()
     estado = String()
+    afiliaciones = Array(AfiliacionPayload())
+
 
 class EventoProgramaCreado(EventoIntegracion):
-    # NOTE La librería Record de Pulsar no es capaz de reconocer campos heredados, 
+    # NOTE La librería Record de Pulsar no es capaz de reconocer campos heredados,
     # por lo que los mensajes al ser codificados pierden sus valores
     # Dupliqué el los cambios que ya se encuentran en la clase Mensaje
     id = String(default=str(uuid.uuid4()))

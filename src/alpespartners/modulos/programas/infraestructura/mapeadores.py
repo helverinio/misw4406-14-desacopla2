@@ -127,8 +127,14 @@ class MapeadorEventoDominioPrograma(Mapeador):
     ) -> EventoProgramaCreado:
         def v1(evento: ProgramaCreado):
             payload = ProgramaCreadoPayload(
-                id_reserva=str(evento.id_programa),
+                programa_id=str(evento.programa_id),
                 estado=str(evento.estado),
+                afiliaciones=[
+                    {
+                        "afiliado_id": str(afiliacion["afiliado_id"]),
+                    }
+                    for afiliacion in evento.afiliaciones
+                ],
             )
             evento_integracion = EventoProgramaCreado(id=str(evento.id))
             evento_integracion.id = str(evento.id)
