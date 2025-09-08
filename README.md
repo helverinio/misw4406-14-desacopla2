@@ -47,6 +47,12 @@ uv run <command>
 docker-compose up --build
 ```
 
+# Crear carpeta de persistencia de estado de zookeper / bookkeeper y elevar privilegios
+```bash
+sudo mkdir -p ./data/zookeeper ./data/bookkeeper
+sudo chown -R 10000 data
+```
+
 ## Servicios disponibles
 
 - **Web App**: http://localhost:5000 - Aplicación Flask principal
@@ -54,8 +60,14 @@ docker-compose up --build
 - **Apache Pulsar**: 
   - Service URL: pulsar://localhost:6650
   - Admin URL: http://localhost:8080
-- **Pulsar Manager**: http://localhost:9527 - Interfaz web para administrar Pulsar
 
+## Colección de postman
+Nuestro servicio cuenta con una coleccion de postman donde puedes interactuar con los siguientes servicios:
+
+1. POST /programas
+2. GET /programas/:id
+
+[Link a postman](/postman/AlpesPartners.postman_collection.json)
 
 # Arquitectura del Proyecto (DDD)
 
