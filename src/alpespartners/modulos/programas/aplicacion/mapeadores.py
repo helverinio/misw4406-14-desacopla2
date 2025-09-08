@@ -52,6 +52,10 @@ class MapeadorProgramaDTOJson(AppMap):
 class MapeadorPrograma(RepMap):
     _FORMATO_FECHA = "%Y-%m-%dT%H:%M:%SZ"
 
+    def _obtener_valor_o_texto(self, campo):
+        """Obtiene el .value si es un enum, o el valor directo si es string"""
+        return campo.value if hasattr(campo, 'value') else campo
+
     def _procesar_vigencia(self, vigencia_dto: VigenciaDTO) -> Vigencia:
         return Vigencia(inicio=vigencia_dto.inicio, fin=vigencia_dto.fin)
 
@@ -106,7 +110,7 @@ class MapeadorPrograma(RepMap):
             logging.info(f"Afiliacion en entidad_a_dto: {afiliacion}")
             afiliaciones_dto.append(self.procesar_afiliacion_dto(afiliacion))
 
-        return ProgramaDTO(entidad.id,entidad.estado.value,entidad.tipo.value,entidad.brand_id,vigencia,terminos,entidad.fecha_creacion,entidad.fecha_actualizacion,afiliaciones_dto)
+        return ProgramaDTO(entidad.id, self._obtener_valor_o_texto(entidad.estado), self._obtener_valor_o_texto(entidad.tipo), entidad.brand_id, vigencia, terminos,entidad.fecha_creacion, entidad.fecha_actualizacion, afiliaciones_dto)
 
     def dto_a_entidad(self, dto: ProgramaDTO) -> Programa:
         logging.info(f"Convirtiendo DTO a entidad: {dto}")
