@@ -69,16 +69,42 @@ class MapeadorPrograma(RepMap):
             fecha_baja=afiliacion_dto.fecha_baja
         )
     
+    def procesar_afiliacion_dto(self, afiliacion: Afiliacion) -> AfiliacionDTO:
+        return AfiliacionDTO(
+            afiliacion_id=str(afiliacion.id),
+            programa_id=str(afiliacion.programa_id) if hasattr(afiliacion, 'programa_id') else "",
+            afiliado_id=afiliacion.afiliado_id,
+            estado=afiliacion.estado if hasattr(afiliacion.estado, 'value') else afiliacion.estado,
+            fecha_alta=afiliacion.fecha_alta,
+            fecha_baja=afiliacion.fecha_baja,
+            creado_en=afiliacion.fecha_creacion,
+            actualizado_en=afiliacion.fecha_actualizacion
+        )
+    
     def obtener_tipo(self) -> type:
         return Programa.__class__
     
     def entidad_a_dto(self, entidad: Programa) -> ProgramaDTO:
-            
-        fecha_creacion = entidad.fecha_creacion.strftime(self._FORMATO_FECHA)
-        fecha_actualizacion = entidad.fecha_actualizacion.strftime(self._FORMATO_FECHA)
-        _id = str(entidad.id)
+        logging.info(f"POST=>Convirtiendo entidad a DTO: {entidad}")
 
-        return ProgramaDTO(fecha_creacion, fecha_actualizacion, _id, list())
+        vigencia = VigenciaDTO(
+            inicio=entidad.vigencia.inicio,
+            fin=entidad.vigencia.fin
+        ) if entidad.vigencia else VigenciaDTO()
+
+        terminos = TerminosDTO(
+            modelo=entidad.terminos.modelo,
+            moneda=entidad.terminos.moneda,
+            tarifa_base=entidad.terminos.tarifa_base,
+            tope=entidad.terminos.tope
+        ) if entidad.terminos else TerminosDTO()
+
+        afiliaciones_dto = list()
+        for afiliacion in entidad.afiliaciones:
+            logging.info(f"Afiliacion en entidad_a_dto: {afiliacion}")
+            afiliaciones_dto.append(self.procesar_afiliacion_dto(afiliacion))
+
+        return ProgramaDTO(entidad.id,entidad.estado.value,entidad.tipo.value,entidad.brand_id,vigencia,terminos,entidad.fecha_creacion,entidad.fecha_actualizacion,afiliaciones_dto)
 
     def dto_a_entidad(self, dto: ProgramaDTO) -> Programa:
         logging.info(f"Convirtiendo DTO a entidad: {dto}")
