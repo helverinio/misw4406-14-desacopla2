@@ -1,0 +1,144 @@
+# Default values for campaigns-service
+# This is a YAML-formatted file.
+
+replicaCount: 2
+
+image:
+  repository: gcr.io/PROJECT_ID/alpespartners
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations:
+    iam.gke.io/gcp-service-account: "REPLACE_WITH_APP_SERVICE_ACCOUNT_EMAIL"
+  # The name of the service account to use.
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: campaigns-service.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: campaigns-service-tls
+  #    hosts:
+  #      - campaigns-service.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Database configuration
+database:
+  host: "REPLACE_WITH_DATABASE_PRIVATE_IP"
+  port: 5432
+  name: "REPLACE_WITH_DATABASE_NAME"
+  user: "REPLACE_WITH_DATABASE_USER"
+  sslMode: "require"
+
+# Secrets configuration
+secrets:
+  postgresPassword: "REPLACE_WITH_BASE64_ENCODED_PASSWORD"
+
+# Environment variables
+env:
+  - name: POSTGRES_HOST
+    valueFrom:
+      configMapKeyRef:
+        name: campaigns-service-config
+        key: POSTGRES_HOST
+  - name: POSTGRES_PORT
+    valueFrom:
+      configMapKeyRef:
+        name: campaigns-service-config
+        key: POSTGRES_PORT
+  - name: POSTGRES_DB
+    valueFrom:
+      configMapKeyRef:
+        name: campaigns-service-config
+        key: POSTGRES_DB
+  - name: POSTGRES_USER
+    valueFrom:
+      configMapKeyRef:
+        name: campaigns-service-config
+        key: POSTGRES_USER
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: campaigns-service-secrets
+        key: POSTGRES_PASSWORD
+
+# Health check configuration
+healthCheck:
+  enabled: true
+  path: /health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Liveness probe configuration
+livenessProbe:
+  enabled: true
+  path: /health
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe configuration
+readinessProbe:
+  enabled: true
+  path: /health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
