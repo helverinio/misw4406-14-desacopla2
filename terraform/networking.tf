@@ -6,7 +6,7 @@ resource "google_compute_network" "main" {
 }
 
 # Create subnet for GKE
-resource "google_compute_subnet" "gke_subnet" {
+resource "google_compute_subnetwork" "gke_subnet" {
   name          = "${var.project_name}-gke-subnet"
   ip_cidr_range = var.gke_subnet_cidr
   region        = var.region
@@ -24,7 +24,7 @@ resource "google_compute_subnet" "gke_subnet" {
 }
 
 # Create subnet for Cloud SQL
-resource "google_compute_subnet" "cloudsql_subnet" {
+resource "google_compute_subnetwork" "cloudsql_subnet" {
   name          = "${var.project_name}-cloudsql-subnet"
   ip_cidr_range = var.cloudsql_subnet_cidr
   region        = var.region

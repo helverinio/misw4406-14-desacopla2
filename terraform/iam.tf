@@ -1,13 +1,13 @@
 # Create service account for GKE nodes
 resource "google_service_account" "gke_node_sa" {
-  account_id   = "${var.project_name}-gke-node-sa"
+  account_id   = "gke-node-sa"
   display_name = "GKE Node Service Account"
   depends_on   = [google_project_service.required_apis]
 }
 
 # Create service account for application pods
 resource "google_service_account" "app_sa" {
-  account_id   = "${var.project_name}-app-sa"
+  account_id   = "app-sa"
   display_name = "Application Service Account"
   depends_on   = [google_project_service.required_apis]
 }

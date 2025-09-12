@@ -1,5 +1,0 @@
-# Backend configuration for Google Cloud Storage
-# Copy this file to backend.conf and update with your values
-
-bucket = "your-project-terraform-state"
-prefix = "terraform/state"

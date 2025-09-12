@@ -2,7 +2,8 @@
 
 This Terraform configuration provisions a complete infrastructure setup on Google Cloud Platform (GCP) including:
 
-- **Cloud SQL PostgreSQL Database** with private IP
+- **Multiple Cloud SQL PostgreSQL Instances** with private IPs (up to 4 instances)
+- **Multiple Artifact Registry Repositories** for Docker images (up to 4 repositories)
 - **GKE Autopilot Cluster** for containerized applications
 - **VPC Network** with proper subnets and security
 - **Service Accounts** with Workload Identity for secure pod-to-database communication
@@ -17,16 +18,13 @@ terraform/
 ├── backend.tf                 # Terraform backend and provider configuration
 ├── apis.tf                    # GCP API enablement
 ├── networking.tf              # VPC, subnets, and networking resources
-├── cloudsql.tf               # Cloud SQL PostgreSQL database resources
+├── cloudsql.tf               # Multiple Cloud SQL PostgreSQL instances
+├── artifact-registry.tf      # Multiple Artifact Registry repositories
 ├── gke.tf                    # Google Kubernetes Engine cluster
 ├── iam.tf                    # Service accounts and IAM permissions
 ├── variables.tf              # Input variables
 ├── outputs.tf                # Output values
-├── terraform.tfvars.example  # Example variables file
-├── backend.conf.example      # Example backend configuration
-├── setup.sh                  # Automated setup script
-├── deploy.sh                 # Deployment script
-├── cleanup.sh                # Cleanup script
+├── terraform.tfvars          # Variables configuration
 ├── charts/                   # Helm charts for application deployment
 │   ├── campaigns-service/    # AlpesPartners campaigns service chart
 │   ├── build-and-push.sh    # Docker build and push script
@@ -38,21 +36,30 @@ terraform/
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        VPC Network                         │
-│  ┌─────────────────┐              ┌─────────────────────┐  │
-│  │   GKE Subnet    │              │  Cloud SQL Subnet   │  │
-│  │                 │              │                     │  │
-│  │  ┌───────────┐  │              │  ┌───────────────┐  │  │
-│  │  │   Pods    │  │              │  │  PostgreSQL   │  │  │
-│  │  │           │  │              │  │   Database    │  │  │
-│  │  │ ┌───────┐ │  │              │  │               │  │  │
-│  │  │ │  App  │ │  │              │  │               │  │  │
-│  │  │ │  Pod  │ │  │              │  │               │  │  │
-│  │  │ └───────┘ │  │              │  │               │  │  │
-│  │  └───────────┘  │              │  └───────────────┘  │  │
-│  └─────────────────┘              └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    VPC Network                                            │
+│  ┌─────────────────┐              ┌─────────────────────────────────────────────────────┐  │
+│  │   GKE Subnet    │              │              Cloud SQL Subnet                      │  │
+│  │                 │              │                                                     │  │
+│  │  ┌───────────┐  │              │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ │  │
+│  │  │   Pods    │  │              │  │   App   │ │Analytics│ │Reporting│ │  Audit  │ │  │
+│  │  │           │  │              │  │Postgres │ │Postgres │ │Postgres │ │Postgres │ │  │
+│  │  │ ┌───────┐ │  │              │  │         │ │         │ │         │ │         │ │  │
+│  │  │ │  App  │ │  │              │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │  │
+│  │  │ │  Pod  │ │  │              │                                                     │  │
+│  │  │ └───────┘ │  │              │                                                     │  │
+│  │  └───────────┘  │              │                                                     │  │
+│  └─────────────────┘              └─────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              Artifact Registry (Global)                                   │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐                                          │
+│  │Campaigns│ │Analytics│ │Reporting│ │  Audit  │                                          │
+│  │Service  │ │Service  │ │Service  │ │Service  │                                          │
+│  │   Repo  │ │   Repo  │ │   Repo  │ │   Repo  │                                          │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Prerequisites
@@ -64,53 +71,69 @@ terraform/
 
 ## Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### 1. Prerequisites Setup
+
+1. **Authenticate with Google Cloud**:
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+
+2. **Set your project**:
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+3. **Enable required APIs**:
+   ```bash
+   gcloud services enable compute.googleapis.com
+   gcloud services enable container.googleapis.com
+   gcloud services enable sqladmin.googleapis.com
+   gcloud services enable servicenetworking.googleapis.com
+   ```
+
+### 2. Configure Terraform
 
 1. **Navigate to the terraform directory**:
    ```bash
    cd terraform
    ```
 
-2. **Run the setup script**:
+2. **Configure backend (optional)**:
    ```bash
-   ./setup.sh
-   ```
-   This will automatically:
-   - Detect your current GCP project
-   - Create `terraform.tfvars` with your project ID
-   - Generate a secure database password
-   - Create `backend.conf` for state management
-   - Set up the GCS bucket name
-
-3. **Deploy the infrastructure**:
-   ```bash
-   ./deploy.sh
+   # Create backend.conf if you want to use remote state
+   # Edit backend.conf with your GCS bucket name
    ```
 
-### Option 2: Manual Setup
-
-1. **Copy configuration files**:
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   cp backend.conf.example backend.conf
-   ```
-
-2. **Edit `terraform.tfvars`** with your values:
+3. **Update terraform.tfvars** with your project details:
    ```hcl
    project_id = "your-gcp-project-id"
-   database_password = "your-secure-password"
-   state_bucket = "your-project-terraform-state"
+   # Update postgres_instances passwords as needed
+   # Update artifact_registry_repositories as needed
    ```
 
-3. **Edit `backend.conf`** with your bucket name:
-   ```hcl
-   bucket = "your-project-terraform-state"
-   prefix = "terraform/state"
-   ```
+### 3. Deploy Infrastructure
 
-4. **Initialize and deploy**:
+1. **Initialize Terraform**:
    ```bash
-   ./deploy.sh
+   terraform init
+   ```
+
+2. **Plan the deployment**:
+   ```bash
+   terraform plan
+   ```
+
+3. **Apply the configuration**:
+   ```bash
+   terraform apply
+   ```
+
+4. **Configure kubectl** (after deployment):
+   ```bash
+   gcloud container clusters get-credentials $(terraform output -raw gke_cluster_name) \
+     --region $(terraform output -raw region) \
+     --project $(terraform output -raw project_id)
    ```
 
 ## Remote State Management
@@ -139,14 +162,67 @@ my-gcp-project-terraform-state
 ### Required Variables
 
 - `project_id`: Your GCP project ID
-- `database_password`: Password for the database user
 
 ### Optional Variables
 
 - `project_name`: Prefix for resource names (default: "misw4406-14")
 - `region`: GCP region (default: "us-central1")
-- `cloudsql_tier`: Database instance size (default: "db-f1-micro")
+- `cloudsql_tier`: Database instance size (default: "db-f1-micro" - free tier)
 - `deletion_protection`: Enable deletion protection (default: true)
+
+### PostgreSQL Instances Configuration
+
+The `postgres_instances` variable allows you to configure up to 4 separate PostgreSQL instances:
+
+```hcl
+postgres_instances = {
+  app_instance = {
+    database_name = "app_database"
+    database_user = "app_user"
+    database_password = "secure_password"
+    instance_name = "app-postgres"
+  }
+  analytics_instance = {
+    database_name = "analytics_database"
+    database_user = "analytics_user"
+    database_password = "another_secure_password"
+    instance_name = "analytics-postgres"
+  }
+  # Add more instances as needed...
+}
+```
+
+Each instance gets:
+- Its own PostgreSQL server
+- A dedicated database
+- A dedicated user with unique password
+- Free tier optimization (no backups, minimal logging)
+
+### Artifact Registry Repositories Configuration
+
+The `artifact_registry_repositories` variable allows you to configure multiple Docker repositories:
+
+```hcl
+artifact_registry_repositories = {
+  campaigns_service = {
+    repository_id = "campaigns-service"
+    description   = "Docker repository for campaigns-service application"
+    keep_count    = 3
+  }
+  analytics_service = {
+    repository_id = "analytics-service"
+    description   = "Docker repository for analytics-service application"
+    keep_count    = 3
+  }
+  # Add more repositories as needed...
+}
+```
+
+Each repository gets:
+- Its own Docker repository
+- Configurable image retention (latest tag + N most recent untagged)
+- Automatic cleanup policies
+- IAM permissions for GKE and CI/CD
 
 ## Security Features
 
@@ -163,7 +239,7 @@ my-gcp-project-terraform-state
 
 ### Data Protection
 - **Encryption**: Data encrypted at rest and in transit
-- **Backups**: Automated daily backups with point-in-time recovery
+- **No Backups**: Backups disabled for cost optimization (suitable for development/testing)
 - **Deletion Protection**: Prevents accidental deletion
 
 ## Helm Charts
@@ -231,11 +307,26 @@ kubectl port-forward svc/campaigns-service 8080:80
 curl http://localhost:8080/health
 ```
 
-The application connects to the database using:
-- **Host**: Private IP (from Terraform output)
+Applications can connect to any of the PostgreSQL instances using:
+- **Host**: Private IP (from Terraform output for each instance)
 - **Port**: 5432
 - **SSL**: Required
-- **Authentication**: Using Workload Identity
+- **Authentication**: Using Workload Identity or instance-specific credentials
+
+Get connection details:
+```bash
+# View all instance connection info
+terraform output database_connection_info
+
+# View specific instance info
+terraform output postgres_instances
+
+# View all repository URLs
+terraform output docker_registry_urls
+
+# View repository details
+terraform output artifact_registry_repositories
+```
 
 ## Connecting to the Database
 
@@ -270,8 +361,11 @@ For external access, you can:
 ## Cost Optimization
 
 - **Autopilot**: GKE Autopilot optimizes resource usage
+- **Free Tier Databases**: All PostgreSQL instances use `db-f1-micro` (free tier)
+- **No Backups**: Backups disabled to minimize costs
+- **Minimal Logging**: Reduced logging to save storage costs
+- **Image Cleanup**: Automatic cleanup of old Docker images (keeps latest + 3 recent)
 - **Preemptible Nodes**: Can be configured for non-production workloads
-- **Database Tiers**: Start with `db-f1-micro` for development
 
 ## Troubleshooting
 
@@ -306,7 +400,7 @@ To destroy all resources:
 terraform destroy
 ```
 
-**Warning**: This will delete all data in the database. Ensure you have backups if needed.
+**Warning**: This will delete all data in all PostgreSQL instances. Since backups are disabled, all data will be permanently lost.
 
 ## Support
 

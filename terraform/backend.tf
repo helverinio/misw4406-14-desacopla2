@@ -3,14 +3,13 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 5.30"
     }
   }
 
   backend "gcs" {
-    # The bucket name will be set via terraform init -backend-config
-    # Example: terraform init -backend-config="bucket=your-project-terraform-state"
-    # prefix = "terraform/state"
+    bucket = "misw4406-14-terraform-state"
+    prefix = "terraform/state"
   }
 }
 

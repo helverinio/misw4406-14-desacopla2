@@ -7,7 +7,7 @@ resource "google_container_cluster" "main" {
   enable_autopilot = true
 
   network    = google_compute_network.main.name
-  subnetwork = google_compute_subnet.gke_subnet.name
+  subnetwork = google_compute_subnetwork.gke_subnet.name
 
   # Configure private cluster
   private_cluster_config {
@@ -37,6 +37,6 @@ resource "google_container_cluster" "main" {
 
   depends_on = [
     google_project_service.required_apis,
-    google_compute_subnet.gke_subnet
+    google_compute_subnetwork.gke_subnet
   ]
 }

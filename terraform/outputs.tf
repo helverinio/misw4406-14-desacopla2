@@ -21,39 +21,28 @@ output "vpc_network_id" {
 
 output "gke_subnet_name" {
   description = "Name of the GKE subnet"
-  value       = google_compute_subnet.gke_subnet.name
+  value       = google_compute_subnetwork.gke_subnet.name
 }
 
 output "cloudsql_subnet_name" {
   description = "Name of the Cloud SQL subnet"
-  value       = google_compute_subnet.cloudsql_subnet.name
+  value       = google_compute_subnetwork.cloudsql_subnet.name
 }
 
-# Cloud SQL outputs
-output "cloudsql_instance_name" {
-  description = "Name of the Cloud SQL instance"
-  value       = google_sql_database_instance.postgres.name
+# Multiple PostgreSQL instances outputs
+output "postgres_instances" {
+  description = "Information about all created PostgreSQL instances"
+  value = {
+    for key, instance in google_sql_database_instance.postgres_instances : key => {
+      instance_name = instance.name
+      connection_name = instance.connection_name
+      private_ip = instance.private_ip_address
+      database_name = google_sql_database.databases[key].name
+      database_user = google_sql_user.users[key].name
+    }
+  }
 }
 
-output "cloudsql_connection_name" {
-  description = "Connection name for Cloud SQL instance"
-  value       = google_sql_database_instance.postgres.connection_name
-}
-
-output "cloudsql_private_ip" {
-  description = "Private IP address of the Cloud SQL instance"
-  value       = google_sql_database_instance.postgres.private_ip_address
-}
-
-output "database_name" {
-  description = "Name of the created database"
-  value       = google_sql_database.app_database.name
-}
-
-output "database_user" {
-  description = "Database user name"
-  value       = google_sql_user.app_user.name
-}
 
 # GKE outputs
 output "gke_cluster_name" {
@@ -95,15 +84,41 @@ output "workload_identity_pool" {
 
 # Connection information for applications
 output "database_connection_info" {
-  description = "Database connection information for applications"
+  description = "Database connection information for all PostgreSQL instances"
   value = {
-    host     = google_sql_database_instance.postgres.private_ip_address
-    port     = 5432
-    database = google_sql_database.app_database.name
-    user     = google_sql_user.app_user.name
-    ssl_mode = "require"
+    for key, instance in google_sql_database_instance.postgres_instances : key => {
+      host     = instance.private_ip_address
+      port     = 5432
+      database = google_sql_database.databases[key].name
+      user     = google_sql_user.users[key].name
+      ssl_mode = "require"
+      instance_name = instance.name
+      connection_name = instance.connection_name
+    }
   }
   sensitive = true
+}
+
+
+# Artifact Registry outputs
+output "artifact_registry_repositories" {
+  description = "Information about all Artifact Registry repositories"
+  value = {
+    for key, repo in google_artifact_registry_repository.repositories : key => {
+      name     = repo.name
+      location = repo.location
+      url      = "${var.region}-docker.pkg.dev/${var.project_id}/${repo.name}"
+      repository_id = repo.repository_id
+    }
+  }
+}
+
+output "docker_registry_urls" {
+  description = "Docker registry URLs for all repositories"
+  value = {
+    for key, repo in google_artifact_registry_repository.repositories : key => 
+      "${var.region}-docker.pkg.dev/${var.project_id}/${repo.name}"
+  }
 }
 
 # Kubernetes configuration

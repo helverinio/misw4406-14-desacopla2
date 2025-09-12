@@ -1,7 +1,9 @@
-# Create Cloud SQL instance
-resource "google_sql_database_instance" "postgres" {
-  name             = "${var.project_name}-postgres"
-  database_version = "POSTGRES_15"
+# Create multiple Cloud SQL PostgreSQL instances
+resource "google_sql_database_instance" "postgres_instances" {
+  for_each = var.postgres_instances
+  
+  name             = each.value.instance_name != null ? each.value.instance_name : "${var.project_name}-${each.key}-postgres"
+  database_version = "POSTGRES_16"
   region           = var.region
 
   depends_on = [google_service_networking_connection.private_vpc_connection]
@@ -12,17 +14,11 @@ resource "google_sql_database_instance" "postgres" {
     ip_configuration {
       ipv4_enabled    = false
       private_network = google_compute_network.main.id
-      require_ssl     = true
     }
 
+    # Backup configuration disabled for cost optimization
     backup_configuration {
-      enabled                        = true
-      start_time                     = "03:00"
-      point_in_time_recovery_enabled = true
-      transaction_log_retention_days = 7
-      backup_retention_settings {
-        retained_backups = 7
-      }
+      enabled = false
     }
 
     maintenance_window {
@@ -31,29 +27,39 @@ resource "google_sql_database_instance" "postgres" {
       update_track = "stable"
     }
 
+    # Optimized database flags for free tier
     database_flags {
       name  = "log_statement"
-      value = "all"
+      value = "none"  # Reduced logging for free tier
     }
 
     database_flags {
       name  = "log_min_duration_statement"
-      value = "1000"
+      value = "5000"  # Increased threshold for free tier
     }
   }
 
   deletion_protection = var.deletion_protection
 }
 
-# Create database
-resource "google_sql_database" "app_database" {
-  name     = var.database_name
-  instance = google_sql_database_instance.postgres.name
+# Create databases for each instance
+resource "google_sql_database" "databases" {
+  for_each = var.postgres_instances
+  
+  name     = each.value.database_name
+  instance = google_sql_database_instance.postgres_instances[each.key].name
 }
 
-# Create database user
-resource "google_sql_user" "app_user" {
-  name     = var.database_user
-  instance = google_sql_database_instance.postgres.name
-  password = var.database_password
+# Create users for each instance
+resource "google_sql_user" "users" {
+  for_each = var.postgres_instances
+  
+  name     = each.value.database_user
+  instance = google_sql_database_instance.postgres_instances[each.key].name
+  password = each.value.database_password
+  
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
+

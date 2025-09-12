@@ -48,4 +48,10 @@ build/
 dist/
 *.egg-info/
 
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+
 data/

@@ -59,23 +59,25 @@ variable "cloudsql_tier" {
   default     = "db-f1-micro"
 }
 
-variable "database_name" {
-  description = "Name of the database to create"
-  type        = string
-  default     = "app_database"
+variable "postgres_instances" {
+  description = "Map of PostgreSQL instances to create with their databases, users and passwords"
+  type = map(object({
+    database_name = string
+    database_user = string
+    database_password = string
+    instance_name = optional(string)
+  }))
+  default = {
+    app_instance = {
+      database_name = "app_database"
+      database_user = "app_user"
+      database_password = "default_password"
+      instance_name = "app-postgres"
+    }
+  }
+  # Removed sensitive = true to allow for_each usage
 }
 
-variable "database_user" {
-  description = "Database user name"
-  type        = string
-  default     = "app_user"
-}
-
-variable "database_password" {
-  description = "Database user password"
-  type        = string
-  sensitive   = true
-}
 
 variable "deletion_protection" {
   description = "Enable deletion protection for Cloud SQL"
@@ -94,4 +96,22 @@ variable "k8s_service_account" {
   description = "Kubernetes service account name"
   type        = string
   default     = "app-sa"
+}
+
+# Artifact Registry configuration
+variable "artifact_registry_repositories" {
+  description = "Map of Artifact Registry repositories to create"
+  type = map(object({
+    repository_id = string
+    description   = string
+    keep_count    = optional(number, 5)
+  }))
+  default = {
+    campaigns_service = {
+      repository_id = "campaigns-service"
+      description   = "Docker repository for campaigns-service application"
+      keep_count    = 5
+    }
+  }
+  # No sensitive values, so no sensitive = true needed
 }
