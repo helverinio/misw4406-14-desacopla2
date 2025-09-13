@@ -1,0 +1,28 @@
+services:
+  gestion-integraciones:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@postgres:5432/partners_db
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: partners_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
