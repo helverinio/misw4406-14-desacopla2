@@ -121,6 +121,12 @@ output "docker_registry_urls" {
   }
 }
 
+# Public IP for campaigns service ingress
+output "campaigns_service_public_ip" {
+  description = "Public IP address for the campaigns service ingress"
+  value       = google_compute_global_address.campaigns_service_ip.address
+}
+
 # Kubernetes configuration
 output "k8s_service_account_annotation" {
   description = "Annotation to add to Kubernetes service account for Workload Identity"

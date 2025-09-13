@@ -4,7 +4,7 @@
 replicaCount: 2
 
 image:
-  repository: gcr.io/PROJECT_ID/alpespartners
+  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/campaigns-service/campaigns-service
   pullPolicy: IfNotPresent
   tag: "latest"
 
@@ -17,9 +17,9 @@ serviceAccount:
   create: true
   # Annotations to add to the service account
   annotations:
-    iam.gke.io/gcp-service-account: "REPLACE_WITH_APP_SERVICE_ACCOUNT_EMAIL"
+    iam.gke.io/gcp-service-account: "app-sa@misw4406-2025-14-desacopla2.iam.gserviceaccount.com"
   # The name of the service account to use.
-  name: ""
+  name: "app-sa"
 
 podAnnotations: {}
 
@@ -35,18 +35,18 @@ securityContext:
   runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 80
   targetPort: 5000
 
 ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: "campaigns-service-ip"
   hosts:
-    - host: campaigns-service.local
+    - host: ""
       paths:
         - path: /
           pathType: Prefix
@@ -65,8 +65,8 @@ resources:
 
 autoscaling:
   enabled: false
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 1
+  maxReplicas: 2
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
@@ -86,7 +86,7 @@ database:
 
 # Secrets configuration
 secrets:
-  postgresPassword: "REPLACE_WITH_BASE64_ENCODED_PASSWORD"
+  postgresPassword: "Y2hhbmdlbWU="
 
 # Environment variables
 env:

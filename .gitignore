@@ -12,7 +12,6 @@ ENV/
 
 # uv
 .uv/
-uv.lock
 
 # Flask instance/config
 instance/

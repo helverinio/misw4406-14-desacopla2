@@ -1,3 +1,8 @@
+# Create a global static IP address for the campaigns service ingress
+resource "google_compute_global_address" "campaigns_service_ip" {
+  name = "campaigns-service-ip"
+}
+
 # Create GKE cluster
 resource "google_container_cluster" "main" {
   name     = "${var.project_name}-gke"
@@ -14,6 +19,13 @@ resource "google_container_cluster" "main" {
     enable_private_nodes    = true
     enable_private_endpoint = false
     master_ipv4_cidr_block  = var.master_ipv4_cidr_block
+  }
+
+  # Configure control plane endpoints for external access
+  control_plane_endpoints_config {
+    dns_endpoint_config {
+      allow_external_traffic = true
+    }
   }
 
   # Configure IP allocation for pods and services
