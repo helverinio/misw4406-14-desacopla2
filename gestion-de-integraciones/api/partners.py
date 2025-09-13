@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+import logging
 from modulos.partners.aplicacion.servicios import ServicioPartners
 from modulos.partners.aplicacion.dto import (
     CrearPartnerDTO, ActualizarPartnerDTO, VerificarKYCDTO, 
@@ -11,6 +12,9 @@ from modulos.partners.dominio.excepciones import (
     PartnerNoEncontrado, EmailYaExiste, IntegracionNoEncontrada,
     KYCNoValido, PartnerEliminado, IntegracionYaRevocada
 )
+
+# Configurar logging
+logger = logging.getLogger(__name__)
 
 # Crear blueprint
 bp = Blueprint('partners', __name__, url_prefix='/api/v1/partners')
@@ -228,8 +232,25 @@ def verificar_kyc_partner(partner_id):
 @bp.route('/integraciones/<integracion_id>/revocar', methods=['PUT'])
 def revocar_integracion(integracion_id):
     """Endpoint para revocar una integración"""
+    logger.info(f"Iniciando revocación de integración con ID: {integracion_id}")
+    
     try:
+        # Log del request recibido
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Request headers: {dict(request.headers)}")
+        
         data = request.get_json() or {}
+        logger.info(f"Datos recibidos: {data}")
+        
+        # Validar integracion_id
+        if not integracion_id:
+            logger.error("ID de integración no proporcionado")
+            return jsonify({
+                'error': 'ID de integración es requerido',
+                'codigo': 'DATOS_INVALIDOS'
+            }), 400
+        
+        logger.info(f"Creando DTO para integración {integracion_id}")
         
         # Crear DTO
         dto = RevocarIntegracionDTO(
@@ -237,36 +258,46 @@ def revocar_integracion(integracion_id):
             motivo=data.get('motivo')
         )
         
+        logger.info(f"DTO creado exitosamente: {dto}")
+        logger.info("Llamando al servicio para revocar integración")
+        
         # Revocar integración
         resultado = servicio_partners.revocar_integracion(dto)
         
+        logger.info(f"Resultado del servicio: {resultado}")
+        
         if resultado:
+            logger.info(f"Integración {integracion_id} revocada exitosamente")
             return jsonify({
                 'mensaje': 'Integración revocada exitosamente',
                 'integracion_id': integracion_id,
                 'motivo': data.get('motivo')
             }), 200
         else:
+            logger.error(f"El servicio retornó False para integración {integracion_id}")
             return jsonify({
                 'error': 'No se pudo revocar la integración',
                 'codigo': 'ERROR_REVOCACION'
             }), 500
             
     except IntegracionNoEncontrada as e:
+        logger.error(f"Integración no encontrada: {str(e)}")
         return jsonify({
             'error': str(e),
             'codigo': 'INTEGRACION_NO_ENCONTRADA'
         }), 404
         
     except IntegracionYaRevocada as e:
+        logger.error(f"Integración ya revocada: {str(e)}")
         return jsonify({
             'error': str(e),
             'codigo': 'INTEGRACION_YA_REVOCADA'
         }), 410
         
     except Exception as e:
+        logger.error(f"Error inesperado en revocar_integracion: {str(e)}", exc_info=True)
         return jsonify({
-            'error': 'Error interno del servidor',
+            'error': f'Error interno del servidor: {str(e)}',
             'codigo': 'ERROR_INTERNO'
         }), 500
 
