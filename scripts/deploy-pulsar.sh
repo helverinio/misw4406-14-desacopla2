@@ -35,7 +35,7 @@ fi
 
 # Add Pulsar Helm repository
 echo "📋 Adding Pulsar Helm repository..."
-helm repo add apache-pulsar ${CHART_REPO}
+helm repo add apache ${CHART_REPO}
 helm repo update
 
 # Create namespace if it doesn't exist
@@ -54,19 +54,20 @@ echo "📝 Using Pulsar values from: ${VALUES_FILE}"
 echo "🔨 Deploying Pulsar Helm chart..."
 if helm list -n ${NAMESPACE} | grep -q ${RELEASE_NAME}; then
     echo "📈 Upgrading existing Pulsar release..."
-    helm upgrade ${RELEASE_NAME} apache-pulsar/${CHART_NAME} \
+    helm upgrade ${RELEASE_NAME} apache/${CHART_NAME} \
+        --install \
         --values ${VALUES_FILE} \
-        --namespace ${NAMESPACE} \
-        --wait \
-        --timeout=15m
+        --namespace ${NAMESPACE} 
+        # --wait \
+        # --timeout=10m
 else
     echo "🆕 Installing new Pulsar release..."
-    helm install ${RELEASE_NAME} apache-pulsar/${CHART_NAME} \
+    helm install ${RELEASE_NAME} apache/${CHART_NAME} \
         --values ${VALUES_FILE} \
         --namespace ${NAMESPACE} \
-        --create-namespace \
-        --wait \
-        --timeout=15m
+        --create-namespace 
+        # --wait \
+        # --timeout=10m
 fi
 
 echo "✅ Successfully deployed Apache Pulsar!"

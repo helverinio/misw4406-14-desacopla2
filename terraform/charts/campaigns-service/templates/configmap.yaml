@@ -9,3 +9,4 @@ data:
   POSTGRES_PORT: {{ .Values.database.port | quote }}
   POSTGRES_DB: {{ .Values.database.name | quote }}
   POSTGRES_USER: {{ .Values.database.user | quote }}
+  BROKER_URL: {{ .Values.broker.url | quote }}

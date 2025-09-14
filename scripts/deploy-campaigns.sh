@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 RELEASE_NAME=${1:-campaigns-service}
-NAMESPACE=${2:-default}
+NAMESPACE=${2:-alpespartners}
 CHART_PATH="terraform/charts/campaigns-service"
 VALUES_FILE="terraform/charts/campaigns-service/values.yaml"
 

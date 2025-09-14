@@ -14,6 +14,8 @@ resource "google_container_cluster" "main" {
   network    = google_compute_network.main.name
   subnetwork = google_compute_subnetwork.gke_subnet.name
 
+  deletion_protection = false
+
   # Configure private cluster
   private_cluster_config {
     enable_private_nodes    = true

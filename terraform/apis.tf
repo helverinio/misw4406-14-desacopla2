@@ -8,7 +8,10 @@ resource "google_project_service" "required_apis" {
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
     "storage.googleapis.com",
-    "artifactregistry.googleapis.com"
+    "artifactregistry.googleapis.com",
+    "monitoring.googleapis.com",
+    "logging.googleapis.com",
+    "gkehub.googleapis.com"
   ])
 
   service = each.value

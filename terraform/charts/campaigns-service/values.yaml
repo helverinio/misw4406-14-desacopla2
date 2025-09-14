@@ -78,15 +78,20 @@ affinity: {}
 
 # Database configuration
 database:
-  host: "REPLACE_WITH_DATABASE_PRIVATE_IP"
+  host: "10.179.0.3"
   port: 5432
-  name: "REPLACE_WITH_DATABASE_NAME"
-  user: "REPLACE_WITH_DATABASE_USER"
+  name: "campaigns_database"
+  user: "campaigns_user"
   sslMode: "require"
+
+# Broker configuration
+broker:
+  url: "pulsar://pulsar-broker.pulsar.svc.cluster.local:6650"
 
 # Secrets configuration
 secrets:
-  postgresPassword: "Y2hhbmdlbWU="
+  # Y2hhbmdlbWU= -> campaigns password
+  postgresPassword: "WTJoaGJtZGxiV1U9"
 
 # Environment variables
 env:
@@ -115,6 +120,11 @@ env:
       secretKeyRef:
         name: campaigns-service-secrets
         key: POSTGRES_PASSWORD
+  - name: BROKER_URL
+    valueFrom:
+      configMapKeyRef:
+        name: campaigns-service-config
+        key: BROKER_URL
 
 # Health check configuration
 healthCheck:
