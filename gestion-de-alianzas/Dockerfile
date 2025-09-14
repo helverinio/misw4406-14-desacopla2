@@ -17,5 +17,5 @@ COPY ./src ./src
 # Exponer puerto
 EXPOSE 8000
 
-# Comando de arranque
-CMD ["uvicorn", "src.entrypoints.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Comando de arranque: ejecutar script antes de arrancar Uvicorn
+CMD ["sh", "-c", "python -m src.scripts.create_tables && uvicorn src.entrypoints.api.main:app --host 0.0.0.0 --port 8000 --reload"]
