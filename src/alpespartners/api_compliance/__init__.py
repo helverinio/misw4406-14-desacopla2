@@ -8,6 +8,9 @@ from flask import Flask, jsonify
 from flask_swagger import swagger
 from sqlalchemy import text
 
+def importar_modelos_alchemy():
+    import alpespartners.modulos.compliance.infraestructura.dto
+
 def create_app(configuracion={}):
     import logging
     logging.basicConfig(level=logging.INFO)
@@ -30,7 +33,7 @@ def create_app(configuracion={}):
     try:
         from alpespartners.config.db import db, init_db
         init_db(app)
-        #importar_modelos_alchemy()
+        importar_modelos_alchemy()
         
         with app.app_context():
             db.create_all()
@@ -39,6 +42,8 @@ def create_app(configuracion={}):
         logger.info("Base de datos de compliance inicializada correctamente.")
     except Exception as e:
         logger.error(f"Error al inicializar la base de datos de compliance: {e}")
+
+    app.register_blueprint(compliance.bp)
 
     @app.route("/spec")
     def spec():
