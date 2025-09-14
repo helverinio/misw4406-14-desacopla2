@@ -1,16 +1,21 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from ..dominio.entidades import Partner, Integracion, EstadoPartner, EstadoKYC, TipoIntegracion
 from ..dominio.repositorios import RepositorioPartners, RepositorioIntegraciones
 from ..dominio.excepciones import (
     PartnerNoEncontrado, EmailYaExiste, IntegracionNoEncontrada, 
     KYCNoValido, PartnerEliminado, IntegracionYaRevocada
 )
+from ..dominio.eventos import (
+    PartnerCreado, PartnerActualizado, PartnerEliminado as EventoPartnerEliminado,
+    KYCVerificado, IntegracionCreada, IntegracionRevocada
+)
 from .dto import (
     CrearPartnerDTO, ActualizarPartnerDTO, VerificarKYCDTO, 
     CrearIntegracionDTO, RevocarIntegracionDTO, PartnerResponseDTO, IntegracionResponseDTO
 )
 from .mapeadores import MapeadorPartner, MapeadorIntegracion
+from ..infraestructura.eventos.despachadores import DespachadorEventosPartner
 
 class ServicioPartners:
     """Servicio de aplicación para gestión de Partners"""
@@ -20,6 +25,7 @@ class ServicioPartners:
         self.repositorio_integraciones = repositorio_integraciones
         self.mapeador_partner = MapeadorPartner()
         self.mapeador_integracion = MapeadorIntegracion()
+        self.despachador_eventos = DespachadorEventosPartner()
     
     def crear_partner(self, dto: CrearPartnerDTO) -> PartnerResponseDTO:
         """Crear un nuevo partner"""
@@ -46,6 +52,18 @@ class ServicioPartners:
         # Guardar en el repositorio
         partner_guardado = self.repositorio_partners.guardar(partner)
         
+        # Publicar evento de partner creado
+        evento = PartnerCreado(
+            partner_id=partner_guardado.id,
+            nombre=partner_guardado.nombre,
+            email=partner_guardado.email,
+            telefono=partner_guardado.telefono,
+            direccion=partner_guardado.direccion,
+            estado=partner_guardado.estado,
+            estado_kyc=partner_guardado.estado_kyc
+        )
+        self.despachador_eventos.publicar_evento(evento)
+        
         return self.mapeador_partner.entidad_a_dto(partner_guardado)
     
     def actualizar_partner(self, partner_id: str, dto: ActualizarPartnerDTO) -> PartnerResponseDTO:
@@ -56,6 +74,9 @@ class ServicioPartners:
         
         if partner.estado == EstadoPartner.ELIMINADO:
             raise PartnerEliminado(partner_id)
+        
+        # Capturar estado anterior para el evento
+        estado_anterior = partner.estado
         
         # Actualizar campos
         if dto.nombre:
@@ -69,6 +90,18 @@ class ServicioPartners:
         
         # Guardar cambios
         partner_actualizado = self.repositorio_partners.guardar(partner)
+        
+        # Publicar evento de partner actualizado
+        evento = PartnerActualizado(
+            partner_id=partner_actualizado.id,
+            nombre=partner_actualizado.nombre,
+            email=partner_actualizado.email,
+            telefono=partner_actualizado.telefono,
+            direccion=partner_actualizado.direccion,
+            estado=partner_actualizado.estado,
+            estado_anterior=estado_anterior
+        )
+        self.despachador_eventos.publicar_evento(evento)
         
         return self.mapeador_partner.entidad_a_dto(partner_actualizado)
     
@@ -87,6 +120,15 @@ class ServicioPartners:
         # Guardar cambios
         self.repositorio_partners.guardar(partner)
         
+        # Publicar evento de partner eliminado
+        evento = EventoPartnerEliminado(
+            partner_id=partner.id,
+            nombre=partner.nombre,
+            email=partner.email,
+            fecha_eliminacion=datetime.utcnow()
+        )
+        self.despachador_eventos.publicar_evento(evento)
+        
         return True
     
     def verificar_kyc_partner(self, partner_id: str, dto: VerificarKYCDTO) -> PartnerResponseDTO:
@@ -100,14 +142,27 @@ class ServicioPartners:
         
         try:
             estado_kyc = EstadoKYC(dto.estado_kyc)
-        except ValueError:
-            raise KYCNoValido(f"Estado KYC inválido: {dto.estado_kyc}")
+        except ValueError as exc:
+            raise KYCNoValido(f"Estado KYC inválido: {dto.estado_kyc}") from exc
+        
+        # Capturar estado anterior para el evento
+        estado_kyc_anterior = partner.estado_kyc
         
         # Actualizar KYC
         partner.verificar_kyc(estado_kyc, dto.documentos)
         
         # Guardar cambios
         partner_actualizado = self.repositorio_partners.guardar(partner)
+        
+        # Publicar evento de KYC verificado
+        evento = KYCVerificado(
+            partner_id=partner_actualizado.id,
+            estado_kyc_anterior=estado_kyc_anterior,
+            estado_kyc_nuevo=estado_kyc,
+            documentos=dto.documentos,
+            observaciones=getattr(dto, 'observaciones', None)
+        )
+        self.despachador_eventos.publicar_evento(evento)
         
         return self.mapeador_partner.entidad_a_dto(partner_actualizado)
     
@@ -125,6 +180,16 @@ class ServicioPartners:
         
         # Guardar cambios
         self.repositorio_integraciones.guardar(integracion)
+        
+        # Publicar evento de integración revocada
+        evento = IntegracionRevocada(
+            integracion_id=integracion.id,
+            partner_id=integracion.partner_id,
+            nombre=integracion.nombre,
+            fecha_revocacion=datetime.utcnow(),
+            motivo=getattr(dto, 'motivo', None)
+        )
+        self.despachador_eventos.publicar_evento(evento)
         
         return True
     
@@ -152,8 +217,8 @@ class ServicioPartners:
         
         try:
             tipo_integracion = TipoIntegracion(dto.tipo)
-        except ValueError:
-            raise ValueError(f"Tipo de integración inválido: {dto.tipo}")
+        except ValueError as exc:
+            raise ValueError(f"Tipo de integración inválido: {dto.tipo}") from exc
         
         # Crear la integración
         integracion = Integracion(
@@ -170,5 +235,16 @@ class ServicioPartners:
         
         # Guardar en el repositorio
         integracion_guardada = self.repositorio_integraciones.guardar(integracion)
+        
+        # Publicar evento de integración creada
+        evento = IntegracionCreada(
+            integracion_id=integracion_guardada.id,
+            partner_id=integracion_guardada.partner_id,
+            tipo=integracion_guardada.tipo,
+            nombre=integracion_guardada.nombre,
+            descripcion=integracion_guardada.descripcion,
+            configuracion=integracion_guardada.configuracion
+        )
+        self.despachador_eventos.publicar_evento(evento)
         
         return self.mapeador_integracion.entidad_a_dto(integracion_guardada)

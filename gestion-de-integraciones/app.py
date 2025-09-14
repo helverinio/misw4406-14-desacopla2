@@ -5,6 +5,7 @@ Aplicación principal para el servicio de Gestión de Integraciones y CRM Partne
 
 from api import crear_app
 from config.db import db
+import threading
 
 def main():
     """Función principal para ejecutar la aplicación"""
@@ -19,6 +20,19 @@ def main():
         # Crear todas las tablas
         db.create_all()
         print("✅ Tablas de base de datos creadas exitosamente")
+    
+    # Inicializar consumidores de eventos en background
+    def iniciar_consumidores():
+        from modulos.partners.infraestructura.eventos.consumidores import iniciar_consumidor_eventos
+        try:
+            print("🎧 Iniciando consumidor de eventos externos...")
+            iniciar_consumidor_eventos('externos')
+        except Exception as e:
+            print(f"❌ Error iniciando consumidor de eventos: {e}")
+    
+    # Ejecutar consumidores en thread separado
+    thread_consumidor = threading.Thread(target=iniciar_consumidores, daemon=True)
+    thread_consumidor.start()
     
     return app
 
