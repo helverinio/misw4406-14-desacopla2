@@ -1,0 +1,447 @@
+# Pulsar Helm Chart Values
+# Optimized for GKE Autopilot deployment
+#
+# IMPORTANT: GKE Autopilot requires minimum 500m CPU for pods with anti-affinity
+# This configuration uses 500m CPU requests to meet Autopilot requirements
+# 
+# For even lower costs, consider:
+# 1. Using Google Cloud Pub/Sub instead of self-managed Pulsar
+# 2. Running Pulsar on a regular GKE cluster (not Autopilot)
+# 3. Using a managed Pulsar service if available
+
+###
+### Global Settings
+###
+
+# Set cluster name
+# clusterName: ""
+
+# Pulsar Metadata Prefix
+metadataPrefix: ""
+
+# Port name prefix for Istio support
+tcpPrefix: ""
+tlsPrefix: ""
+
+# Persistence - use ephemeral storage for cost savings
+persistence: false
+volumes:
+  persistence: false
+  local_storage: false
+
+# RBAC
+rbac:
+  enabled: false
+  limit_to_namespace: true
+
+# AntiAffinity - disabled for GKE Autopilot cost optimization
+affinity:
+  anti_affinity: false
+  type: preferredDuringSchedulingIgnoredDuringExecution
+
+###
+### Components
+###
+
+components:
+  zookeeper: true
+  bookkeeper: true
+  broker: true
+  proxy: true
+  functions: false
+  autorecovery: false  # Disabled to avoid Autopilot constraint issues
+  toolset: true
+  pulsar_manager: false
+
+# Default image settings
+defaultPulsarImageRepository: apachepulsar/pulsar-all
+defaultPulsarImageTag: ""
+defaultPullPolicy: IfNotPresent
+
+###
+### TLS Configuration (disabled for simplicity)
+###
+
+tls:
+  enabled: false
+
+###
+### Authentication (disabled for development)
+###
+
+auth:
+  authentication:
+    enabled: false
+  authorization:
+    enabled: false
+
+###
+### Cert Manager (disabled)
+###
+
+certs:
+  internal_issuer:
+    enabled: false
+
+###
+### Zookeeper Configuration
+###
+
+zookeeper:
+  component: zookeeper
+  replicaCount: 1  # Single node for cost optimization
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+  
+  # Disable anti-affinity for cost savings
+  affinity:
+    anti_affinity: false
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Use ephemeral storage
+  volumes:
+    persistence: false
+    data:
+      name: data
+      size: 1Gi
+      local_storage: false
+    datalog:
+      name: datalog
+      size: 1Gi
+      local_storage: false
+  
+  # Security context for Autopilot
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
+  
+  # Configuration
+  configData:
+    PULSAR_MEM: >
+      -Xms64m -Xmx128m
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+
+###
+### BookKeeper Configuration
+###
+
+bookkeeper:
+  component: bookie
+  replicaCount: 1  # Single node for cost optimization
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  
+  # BookKeeper Cluster Initialize
+  metadata:
+    waitZookeeperTimeout: 600
+    initTimeout: 60
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 500m  # Autopilot minimum
+      limits:
+        memory: 512Mi
+        cpu: 1000m
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+  
+  # Disable anti-affinity for cost savings
+  affinity:
+    anti_affinity: false
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Use ephemeral storage
+  volumes:
+    persistence: false
+    journal:
+      name: journal
+      size: 2Gi
+      local_storage: false
+    ledgers:
+      name: ledgers
+      size: 5Gi
+      local_storage: false
+  
+  # Security context for Autopilot
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
+  
+  # Configuration
+  configData:
+    PULSAR_MEM: >
+      -Xms128m
+      -Xmx256m
+      -XX:MaxDirectMemorySize=256m
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+
+###
+### Broker Configuration
+###
+
+broker:
+  component: broker
+  replicaCount: 1  # Single node for cost optimization
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 2Gi
+      cpu: 1000m
+  
+  # Disable anti-affinity for cost savings
+  affinity:
+    anti_affinity: false
+    type: preferredDuringSchedulingIgnoredDuringExecution
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Configuration
+  configData:
+    PULSAR_MEM: >
+      -Xms128m -Xmx256m -XX:MaxDirectMemorySize=256m
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+    managedLedgerDefaultEnsembleSize: "1"
+    managedLedgerDefaultWriteQuorum: "1"
+    managedLedgerDefaultAckQuorum: "1"
+
+###
+### Proxy Configuration
+###
+
+proxy:
+  component: proxy
+  replicaCount: 1  # Single node for cost optimization
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+  
+  # Disable anti-affinity for cost savings
+  affinity:
+    anti_affinity: false
+    type: preferredDuringSchedulingIgnoredDuringExecution
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Configuration
+  configData:
+    PULSAR_MEM: >
+      -Xms64m -Xmx64m -XX:MaxDirectMemorySize=64m
+    PULSAR_GC: >
+      -XX:+UseZGC
+      -XX:+ZGenerational
+      -XX:+AlwaysPreTouch
+      -XX:+UseTransparentHugePages
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+DisableExplicitGC
+      -XX:+PerfDisableSharedMem
+    httpNumThreads: "8"
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    annotations: {}
+
+###
+### Toolset Configuration
+###
+
+toolset:
+  component: toolset
+  useProxy: true
+  replicaCount: 1
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Configuration
+  configData:
+    PULSAR_MEM: >
+      -Xms64M
+      -Xmx128M
+      -XX:MaxDirectMemorySize=128M
+
+###
+### Pulsar Manager Configuration
+###
+
+pulsar_manager:
+  component: pulsar-manager
+  replicaCount: 1
+  
+  # GKE Autopilot optimized resources
+  resources:
+    requests:
+      memory: 512M
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+  
+  # GKE Autopilot compatibility
+  nodeSelector: {}
+  tolerations: []
+  
+  # Use ephemeral storage
+  volumes:
+    persistence: false
+    data:
+      name: data
+      size: 128Mi
+      local_storage: false
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 9527
+    targetPort: 9527
+    annotations: {}
+  
+  # Configuration
+  configData:
+    REDIRECT_HOST: "http://127.0.0.1"
+    REDIRECT_PORT: "9527"
+    LOG_LEVEL: "INFO"
+    # Use in-memory database for simplicity
+    URL: "jdbc:h2:mem:pulsar_manager"
+    DRIVER_CLASS_NAME: "org.h2.Driver"
+    PULSAR_PEEK_MESSAGE: "true"
+  
+  # Admin credentials
+  admin:
+    ui_username: "pulsar"
+    ui_password: "pulsar"
+    db_username: "pulsar"
+    db_password: "pulsar"
+
+###
+### Functions Configuration (disabled)
+###
+
+functions:
+  component: functions-worker
+  useBookieAsStateStore: false
+  rbac:
+    limit_to_namespace: true
+
+###
+### Pulsar Metadata Configuration
+###
+
+pulsar_metadata:
+  component: pulsar-init
+  waitZookeeperTimeout: 600
+  waitBookkeeperTimeout: 120
+  initTimeout: 60
+  
+  # Resources for metadata initialization
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+
+###
+### Init Container Resources
+###
+
+initContainer:
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 500m  # Autopilot minimum
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+
+###
+### Job TTL Configuration
+###
+
+job:
+  ttl:
+    enabled: false
+    secondsAfterFinished: 3600
+
+###
+### Monitoring Stack (disabled for cost savings)
+###
+
+victoria-metrics-k8s-stack:
+  enabled: false
+
+###
+### Extra Deployments
+###
+
+extraDeploy: []

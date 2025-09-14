@@ -1,0 +1,30 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required variables
+project_id = "your-gcp-project-id"
+database_password = "your-secure-database-password"
+
+# State bucket configuration (also update backend.conf)
+state_bucket = "your-project-terraform-state"
+
+# Optional variables (uncomment and modify as needed)
+# project_name = "misw4406-14"
+# region = "us-central1"
+# zone = "us-central1-a"
+
+# Network configuration (optional - defaults are provided)
+# gke_subnet_cidr = "10.0.1.0/24"
+# cloudsql_subnet_cidr = "10.0.2.0/24"
+# pods_cidr = "10.1.0.0/16"
+# services_cidr = "10.2.0.0/16"
+# master_ipv4_cidr_block = "172.16.0.0/28"
+
+# Cloud SQL configuration (optional)
+# cloudsql_tier = "db-f1-micro"  # For production, consider db-standard-1 or higher
+# database_name = "app_database"
+# database_user = "app_user"
+# deletion_protection = true
+
+# Kubernetes configuration (optional)
+# k8s_namespace = "default"
+# k8s_service_account = "app-sa"
