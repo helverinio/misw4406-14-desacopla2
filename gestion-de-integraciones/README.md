@@ -278,10 +278,7 @@ El servicio incluye:
 - Manejo de excepciones centralizado
 - Códigos de error consistentes
 
-## Próximas Funcionalidades
 
-- [ ] Autenticación y autorización
-- [ ] Auditoría de cambios
-- [ ] Notificaciones por eventos
-- [ ] Métricas y monitoreo avanzado
-- [ ] Tests unitarios e integración
+## Importante:
+ - En caso de correr el servicio de manera aislada, es necesario tener un broker pulsar corriendo en el puerto 6650 lo cual se puede lograr corriendo el comando **docker-compose -f docker-compose.pulsar.yml up -d** en la raiz del proyecto
+ - Luego ya puedes correr el servicio con el comando **docker-compose up --build** en el proyecto gestion-de-integraciones
