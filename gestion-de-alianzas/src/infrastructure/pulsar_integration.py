@@ -8,7 +8,8 @@ from src.domain.models.contrato import TipoContrato, EstadoContrato
 from src.domain.use_cases.create_contrato_use_case import CreateContratoUseCase
 from src.assembly import build_create_contrato_use_case
 import os
-
+import asyncio
+import random, uuid
 PULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
 TOPIC = 'gestion-de-integraciones'
 
@@ -34,7 +35,7 @@ class PulsarContratoConsumer:
         self.use_case = build_create_contrato_use_case()
 
     def listen(self):
-        import asyncio
+        
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         print('Listening for Contrato events...')
@@ -45,13 +46,16 @@ class PulsarContratoConsumer:
                 print(f'\n\n\nReceived message: {data}\n\n\n')
                 # contrato = Contrato(**data)
 
-                import random, uuid
+                
                 tipos = list(TipoContrato)
                 estados = list(EstadoContrato)
                 monedas = ["USD", "EUR", "COP", "MXN"]
                 condiciones_list = ["Condición A", "Condición B", "Condición C", "Condición D"]
+                partner_id = data.get("partner_id")
+                if not partner_id:
+                    partner_id = str(uuid.uuid4())
                 contrato = Contrato(
-                    partner_id=str(uuid.uuid4()),
+                    partner_id=partner_id,
                     tipo=random.choice(tipos),
                     fecha_inicio=date.today(),
                     fecha_fin=None if random.random() < 0.5 else date.today(),
