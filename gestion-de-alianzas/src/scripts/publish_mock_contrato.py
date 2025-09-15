@@ -7,22 +7,33 @@ from src.domain.models.contrato import Contrato, TipoContrato, EstadoContrato
 PULSAR_SERVICE_URL = 'pulsar://localhost:6650'
 TOPIC = 'gestion-de-integraciones'
 
+import random
 def create_mock_contrato():
     tipos = list(TipoContrato)
     estados = list(EstadoContrato)
     monedas = ["USD", "EUR", "COP", "MXN"]
     condiciones_list = ["Condición A", "Condición B", "Condición C", "Condición D"]
+    partner_id = str(uuid.uuid4())
+    tipo = random.choice(tipos)
+    fecha_inicio = date.today()
+    fecha_fin = None if random.random() < 0.5 else date.today()
+    monto = round(random.uniform(100, 10000), 2)
+    moneda = random.choice(monedas)
+    condiciones = random.choice(condiciones_list)
+    estado = random.choice(estados)
+    fecha_creacion = datetime.utcnow()
+    fecha_actualizacion = None
     return Contrato(
-        partner_id=str(uuid.uuid4()),
-        tipo=tipos[0],
-        fecha_inicio=date.today(),
-        fecha_fin=None,
-        monto=500.0,
-        moneda=monedas[0],
-        condiciones=condiciones_list[0],
-        estado=estados[0],
-        fecha_creacion=datetime.utcnow(),
-        fecha_actualizacion=None
+        partner_id=partner_id,
+        tipo=tipo,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        monto=monto,
+        moneda=moneda,
+        condiciones=condiciones,
+        estado=estado,
+        fecha_creacion=fecha_creacion,
+        fecha_actualizacion=fecha_actualizacion
     )
 
 def main():

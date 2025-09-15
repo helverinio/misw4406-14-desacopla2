@@ -10,12 +10,9 @@ services:
       - BROKER_URL=pulsar://broker:6650
     depends_on:
       - postgres
-    volumes:
-      - .:/app
-    working_dir: /app
-    networks:
-      - default
-      - main_default
+    # volumes:
+    #   - .:/app
+    # working_dir: /app
 
   postgres:
     image: postgres:15
