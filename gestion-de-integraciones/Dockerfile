@@ -3,7 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app/src
+    PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -35,8 +35,8 @@ COPY README.md .
 # Install dependencies using uv
 RUN uv sync --locked --no-dev
 
-# Copy source code
-COPY src ./src
+# Copiar código fuente
+COPY . .
 
 # Set ownership of app directory
 RUN chown -R appuser:appuser /app
@@ -47,8 +47,12 @@ USER appuser
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Expose port
-EXPOSE 5000
+# Exponer puerto
+EXPOSE 5001
 
-# Run the application
-CMD ["flask", "--app", "src.alpespartners.api:create_app", "run", "--host=0.0.0.0", "--port=5000"]
+# Variables de entorno
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+
+# Comando para ejecutar la aplicación
+CMD ["python", "app.py"]

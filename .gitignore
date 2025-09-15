@@ -12,7 +12,6 @@ ENV/
 
 # uv
 .uv/
-uv.lock
 
 # Flask instance/config
 instance/
@@ -47,5 +46,11 @@ pytest_cache/
 build/
 dist/
 *.egg-info/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
 
 data/
