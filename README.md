@@ -293,6 +293,6 @@ class PartnerCreado:
 ```
 
 ### Video de la entrega 4 
-[entrega 4 desacopladois](https://youtu.be/u21-_RgLSeY)
+[entrega 4 desacoplados](https://youtu.be/u21-_RgLSeY)
 
 
