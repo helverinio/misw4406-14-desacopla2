@@ -1,0 +1,99 @@
+services:
+  # Start zookeeper
+  zookeeper-integraciones:
+    image: apachepulsar/pulsar:latest
+    container_name: zookeeper-integraciones
+    restart: on-failure
+    volumes:
+      - ./data/zookeeper:/pulsar/data/zookeeper
+    environment:
+      - metadataStoreUrl=zk:zookeeper-integraciones:2181
+      - PULSAR_MEM=-Xms256m -Xmx256m -XX:MaxDirectMemorySize=256m
+    command:
+      - bash
+      - -c 
+      - |
+        bin/apply-config-from-env.py conf/zookeeper.conf && \
+        bin/generate-zookeeper-config.sh conf/zookeeper.conf && \
+        exec bin/pulsar zookeeper    
+    healthcheck:
+      test: ["CMD", "bin/pulsar-zookeeper-ruok.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # Init cluster metadata
+  pulsar-init-integraciones:
+    container_name: pulsar-init-integraciones
+    hostname: pulsar-init-integraciones
+    image: apachepulsar/pulsar:latest
+    command:
+      - bash
+      - -c 
+      - |
+        bin/pulsar initialize-cluster-metadata \
+        --cluster cluster-integraciones \
+        --zookeeper zookeeper-integraciones:2181 \
+        --configuration-store zookeeper-integraciones:2181 \
+        --web-service-url http://broker-integraciones:8080 \
+        --broker-service-url pulsar://broker-integraciones:6651
+    depends_on:
+      zookeeper-integraciones:
+        condition: service_healthy
+
+  # Start bookie
+  bookie-integraciones:
+    image: apachepulsar/pulsar:latest
+    container_name: bookie-integraciones
+    restart: on-failure
+    environment:
+      - clusterName=cluster-integraciones
+      - zkServers=zookeeper-integraciones:2181
+      - metadataServiceUri=metadata-store:zk:zookeeper-integraciones:2181
+      - advertisedAddress=bookie-integraciones
+      - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+    depends_on:
+      zookeeper-integraciones:
+        condition: service_healthy
+      pulsar-init-integraciones:
+        condition: service_completed_successfully
+    volumes:
+      - ./data/bookkeeper:/pulsar/data/bookkeeper
+    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
+
+  # Start broker
+  broker-integraciones:
+    image: apachepulsar/pulsar:latest
+    container_name: broker-integraciones
+    hostname: broker-integraciones
+    restart: on-failure
+    environment:
+      - metadataStoreUrl=zk:zookeeper-integraciones:2181
+      - zookeeperServers=zookeeper-integraciones:2181
+      - clusterName=cluster-integraciones
+      - managedLedgerDefaultEnsembleSize=1
+      - managedLedgerDefaultWriteQuorum=1
+      - managedLedgerDefaultAckQuorum=1
+      - advertisedAddress=broker-integraciones
+      - advertisedListeners=external:pulsar://broker-integraciones:6651
+      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+      - webServicePort=8080
+      - brokerServicePort=6651
+    depends_on:
+      zookeeper-integraciones:
+        condition: service_healthy
+      bookie-integraciones:
+        condition: service_started
+    ports:
+      - "6651:6651"  # Different port from main project (6650)
+      - "8081:8080"  # Different port from main project (8080)
+    command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pulsarmanagerdata:
