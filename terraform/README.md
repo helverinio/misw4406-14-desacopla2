@@ -42,12 +42,13 @@ terraform/
 │  │   GKE Subnet    │              │              Cloud SQL Subnet                      │  │
 │  │                 │              │                                                     │  │
 │  │  ┌───────────┐  │              │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ │  │
-│  │  │   Pods    │  │              │  │   App   │ │Analytics│ │Reporting│ │  Audit  │ │  │
-│  │  │           │  │              │  │Postgres │ │Postgres │ │Postgres │ │Postgres │ │  │
+│  │  │   Pods    │  │              │  │Alliances│ │Campaigns│ │Compliance│ │Integrations│ │
+│  │  │           │  │              │  │Postgres │ │Postgres │ │Postgres │ │Postgres │ │
 │  │  │ ┌───────┐ │  │              │  │         │ │         │ │         │ │         │ │  │
-│  │  │ │  App  │ │  │              │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │  │
-│  │  │ │  Pod  │ │  │              │                                                     │  │
-│  │  │ └───────┘ │  │              │                                                     │  │
+│  │  │ │Alliances│ │  │              │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │  │
+│  │  │ │Campaigns│ │  │              │                                                     │  │
+│  │  │ │Compliance│ │  │              │                                                     │  │
+│  │  │ │Integrations│ │  │              │                                                     │  │
 │  │  └───────────┘  │              │                                                     │  │
 │  └─────────────────┘              └─────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -55,7 +56,7 @@ terraform/
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
 │                              Artifact Registry (Global)                                   │
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐                                          │
-│  │Campaigns│ │Analytics│ │Reporting│ │  Audit  │                                          │
+│  │Alliances│ │Campaigns│ │Compliance│ │Integrations│                                        │
 │  │Service  │ │Service  │ │Service  │ │Service  │                                          │
 │  │   Repo  │ │   Repo  │ │   Repo  │ │   Repo  │                                          │
 │  └─────────┘ └─────────┘ └─────────┘ └─────────┘                                          │
@@ -327,6 +328,17 @@ terraform output docker_registry_urls
 # View repository details
 terraform output artifact_registry_repositories
 ```
+
+## Service Endpoints
+
+The following services are deployed and accessible via their external IP addresses:
+
+| Service | URL |
+|---------|-----|
+| alliances-service | http://34.144.243.152/ |
+| campaigns-service | http://35.244.216.199/ |
+| compliance-service | http://34.111.90.7/ |
+| integrations-service | http://34.111.239.116/ |
 
 ## Connecting to the Database
 
