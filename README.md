@@ -292,12 +292,7 @@ class PartnerCreado:
     timestamp: datetime
 ```
 
-### Principios SOLID Aplicados
-
-- **S**: Cada microservicio tiene una responsabilidad específica
-- **O**: Extensible mediante nuevos handlers de eventos
-- **L**: Interfaces bien definidas entre capas
-- **I**: Interfaces segregadas por contexto
-- **D**: Inversión de dependencias con repositorios abstractos
+### Video de la entrega 4 
+[entrega 4 desacopladois](https://youtu.be/u21-_RgLSeY)
 
 
