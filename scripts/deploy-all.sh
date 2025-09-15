@@ -57,18 +57,18 @@ kubectl create namespace alpespartners --dry-run=client -o yaml | kubectl apply 
 print_success "Namespace ready"
 
 # Deploy shared-ingress first (includes BackendConfigs)
-print_status "Deploying shared-ingress with BackendConfigs..."
-helm upgrade --install shared-ingress ./terraform/charts/shared-ingress \
-  --namespace alpespartners \
-  --wait \
-  --timeout=5m
+# print_status "Deploying shared-ingress with BackendConfigs..."
+# helm upgrade --install shared-ingress ./terraform/charts/shared-ingress \
+#   --namespace alpespartners \
+#   --wait \
+#   --timeout=5m
 
-if [ $? -eq 0 ]; then
-    print_success "Shared ingress deployed successfully"
-else
-    print_error "Failed to deploy shared ingress"
-    exit 1
-fi
+# if [ $? -eq 0 ]; then
+#     print_success "Shared ingress deployed successfully"
+# else
+#     print_error "Failed to deploy shared ingress"
+#     exit 1
+# fi
 
 # Deploy campaigns service
 print_status "Deploying campaigns service..."

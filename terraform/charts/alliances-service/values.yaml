@@ -38,14 +38,13 @@ service:
   type: NodePort
   port: 80
   targetPort: 8000
-  backendConfig: "alliances-backend-config"
 
 ingress:
-  enabled: false
+  enabled: true
   className: "gce"
   annotations:
     kubernetes.io/ingress.class: gce
-    kubernetes.io/ingress.global-static-ip-name: "alliances-service-ip"
+    kubernetes.io/ingress.global-static-ip-name: "alliances-api-ip"
   hosts:
     - host: ""
       paths:

@@ -4,10 +4,7 @@ metadata:
   name: {{ include "compliance-service.fullname" . }}
   labels:
     {{- include "compliance-service.labels" . | nindent 4 }}
-  {{- if .Values.service.backendConfig }}
-  annotations:
-    cloud.google.com/backend-config: '{"default": "{{ .Values.service.backendConfig }}"}'
-  {{- end }}
+  annotations: {}
 spec:
   type: {{ .Values.service.type }}
   ports:

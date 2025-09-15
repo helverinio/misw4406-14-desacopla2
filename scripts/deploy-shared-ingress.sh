@@ -48,6 +48,7 @@ echo "🔨 Deploying Helm chart..."
 if helm list -n ${NAMESPACE} | grep -q ${RELEASE_NAME}; then
     echo "📈 Upgrading existing release..."
     helm upgrade ${RELEASE_NAME} ${CHART_PATH} \
+        --install \
         --values ${VALUES_FILE} \
         --namespace ${NAMESPACE}
 else

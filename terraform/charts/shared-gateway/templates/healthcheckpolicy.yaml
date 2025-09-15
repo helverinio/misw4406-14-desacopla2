@@ -1,0 +1,48 @@
+{{- if .Values.gateway.enabled -}}
+{{- range .Values.gateway.routes }}
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ .name }}-health-check
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    {{- include "shared-gateway.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: healthcheckpolicy
+    app.kubernetes.io/name: {{ .name }}-health-check
+spec:
+  default:
+    {{- if $.Values.gateway.healthCheck.interval }}
+    checkIntervalSec: {{ $.Values.gateway.healthCheck.interval | replace "s" "" | int }}
+    {{- else }}
+    checkIntervalSec: 10
+    {{- end }}
+    {{- if $.Values.gateway.healthCheck.timeout }}
+    timeoutSec: {{ $.Values.gateway.healthCheck.timeout | replace "s" "" | int }}
+    {{- else }}
+    timeoutSec: 5
+    {{- end }}
+    {{- if $.Values.gateway.healthCheck.healthyThreshold }}
+    healthyThreshold: {{ $.Values.gateway.healthCheck.healthyThreshold }}
+    {{- else }}
+    healthyThreshold: 1
+    {{- end }}
+    {{- if $.Values.gateway.healthCheck.unhealthyThreshold }}
+    unhealthyThreshold: {{ $.Values.gateway.healthCheck.unhealthyThreshold }}
+    {{- else }}
+    unhealthyThreshold: 3
+    {{- end }}
+    logConfig:
+      enabled: true
+    config:
+      type: {{ $.Values.gateway.healthCheck.protocol | default "HTTP" }}
+      httpHealthCheck:
+        portSpecification: "USE_FIXED_PORT"
+        port: {{ $.Values.gateway.healthCheck.port | default 80 }}
+        requestPath: {{ if and .healthCheck .healthCheck.path }}{{ .healthCheck.path | quote }}{{ else }}{{ $.Values.gateway.healthCheck.path | quote }}{{ end }}
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .service.name }}
+{{- end }}
+{{- end }}

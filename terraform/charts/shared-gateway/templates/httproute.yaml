@@ -1,0 +1,106 @@
+{{- if .Values.gateway.enabled -}}
+{{- range .Values.gateway.routes }}
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: {{ .name }}-route
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    {{- include "shared-gateway.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: httproute
+    app.kubernetes.io/name: {{ .name }}-route
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+  - name: {{ $.Values.gateway.name }}
+    namespace: {{ $.Values.global.namespace }}
+  hostnames:
+    {{- if $.Values.gateway.host }}
+    - {{ $.Values.gateway.host | quote }}
+    {{- end }}
+  rules:
+  - matches:
+    {{- if .pathPrefix }}
+    - path:
+        type: PathPrefix
+        value: {{ .pathPrefix | quote }}
+    {{- end }}
+    {{- if .pathRegex }}
+    - path:
+        type: RegularExpression
+        value: {{ .pathRegex | quote }}
+    {{- end }}
+    {{- if .headers }}
+    {{- range .headers }}
+    - headers:
+      {{- range $key, $value := . }}
+      - name: {{ $key }}
+        value: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+    filters:
+    {{- if .rewrite }}
+    - type: URLRewrite
+      urlRewrite:
+        {{- if .rewrite.path }}
+        path:
+          {{- if eq .rewrite.path.type "ReplacePrefixMatch" }}
+          type: ReplacePrefixMatch
+          replacePrefixMatch: {{ .rewrite.path.replacePrefixMatch | quote }}
+          {{- else if eq .rewrite.path.type "ReplaceFullPath" }}
+          type: ReplaceFullPath
+          replaceFullPath: {{ .rewrite.path.replaceFullPath | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .rewrite.hostname }}
+        hostname: {{ .rewrite.hostname | quote }}
+        {{- end }}
+    {{- end }}
+    {{- if .redirect }}
+    - type: RequestRedirect
+      requestRedirect:
+        {{- if .redirect.scheme }}
+        scheme: {{ .redirect.scheme | quote }}
+        {{- end }}
+        {{- if .redirect.hostname }}
+        hostname: {{ .redirect.hostname | quote }}
+        {{- end }}
+        {{- if .redirect.port }}
+        port: {{ .redirect.port }}
+        {{- end }}
+        {{- if .redirect.path }}
+        path:
+          {{- if eq .redirect.path.type "ReplaceFullPath" }}
+          type: ReplaceFullPath
+          replaceFullPath: {{ .redirect.path.replaceFullPath | quote }}
+          {{- else if eq .redirect.path.type "ReplacePrefixMatch" }}
+          type: ReplacePrefixMatch
+          replacePrefixMatch: {{ .redirect.path.replacePrefixMatch | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .redirect.statusCode }}
+        statusCode: {{ .redirect.statusCode }}
+        {{- end }}
+    {{- end }}
+    backendRefs:
+    - name: {{ .service.name }}
+      port: {{ .service.port }}
+      {{- if .service.weight }}
+      weight: {{ .service.weight }}
+      {{- end }}
+    {{- if .timeout }}
+    timeout:
+      {{- if .timeout.request }}
+      request: {{ .timeout.request }}
+      {{- end }}
+      {{- if .timeout.backend }}
+      backend: {{ .timeout.backend }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

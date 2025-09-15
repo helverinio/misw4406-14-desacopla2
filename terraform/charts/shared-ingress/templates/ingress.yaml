@@ -20,10 +20,6 @@ metadata:
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    {{- if .Values.backendConfig.enabled }}
-    # BackendConfig annotations for path rewriting
-    cloud.google.com/backend-config: '{"default": "default-backend-config", "alliances-service": "alliances-backend-config", "campaigns-service": "campaigns-backend-config", "integrations-service": "integrations-backend-config", "compliance-service": "compliance-backend-config"}'
-    {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
   ingressClassName: {{ .Values.ingress.className }}

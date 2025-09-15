@@ -38,10 +38,18 @@ service:
   type: NodePort
   port: 80
   targetPort: 5000
-  backendConfig: "compliance-backend-config"
 
 ingress:
-  enabled: false
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: "compliance-api-ip"
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
 
   tls: []
   #  - secretName: compliance-service-tls
