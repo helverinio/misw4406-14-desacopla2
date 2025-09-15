@@ -59,14 +59,15 @@ class MapeadorEventoDominioPartner:
                 estado_kyc=evento.estado_kyc.value
             )
             
-            evento_integracion = EventoPartnerCreadoIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "PartnerCreado"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoPartnerCreadoIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="PartnerCreado",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 
@@ -87,14 +88,15 @@ class MapeadorEventoDominioPartner:
                 estado_anterior=evento.estado_anterior.value
             )
             
-            evento_integracion = EventoPartnerActualizadoIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "PartnerActualizado"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoPartnerActualizadoIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="PartnerActualizado",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 
@@ -112,14 +114,15 @@ class MapeadorEventoDominioPartner:
                 estado_kyc=""
             )
             
-            evento_integracion = EventoPartnerEliminadoIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "PartnerEliminado"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoPartnerEliminadoIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="PartnerEliminado",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 
@@ -134,14 +137,15 @@ class MapeadorEventoDominioPartner:
                 observaciones=evento.observaciones or ""
             )
             
-            evento_integracion = EventoKYCVerificadoIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "KYCVerificado"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoKYCVerificadoIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="KYCVerificado",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 
@@ -157,14 +161,15 @@ class MapeadorEventoDominioPartner:
                 descripcion=evento.descripcion or ""
             )
             
-            evento_integracion = EventoIntegracionCreadaIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "IntegracionCreada"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoIntegracionCreadaIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="IntegracionCreada",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 
@@ -179,14 +184,15 @@ class MapeadorEventoDominioPartner:
                 motivo=evento.motivo or ""
             )
             
-            evento_integracion = EventoIntegracionRevocadaIntegracion()
-            evento_integracion.id = str(evento.id)
-            evento_integracion.time = unix_time_millis(evento.fecha_evento)
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = "IntegracionRevocada"
-            evento_integracion.datacontenttype = "AVRO"
-            evento_integracion.service_name = "gestion-de-integraciones"
-            evento_integracion.data = payload
+            evento_integracion = EventoIntegracionRevocadaIntegracion(
+                id=str(evento.id),
+                time=unix_time_millis(evento.fecha_evento),
+                specversion=str(version),
+                type="IntegracionRevocada",
+                datacontenttype="AVRO",
+                service_name="gestion-de-integraciones",
+                data=payload
+            )
             
             return evento_integracion
 

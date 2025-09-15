@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import List
 from ..dominio.entidades import Partner, Integracion, EstadoPartner, EstadoKYC, TipoIntegracion
@@ -26,45 +27,78 @@ class ServicioPartners:
         self.mapeador_partner = MapeadorPartner()
         self.mapeador_integracion = MapeadorIntegracion()
         self.despachador_eventos = DespachadorEventosPartner()
+        self.logger = logging.getLogger(__name__)
     
     def crear_partner(self, dto: CrearPartnerDTO) -> PartnerResponseDTO:
         """Crear un nuevo partner"""
-        # Verificar que el email no exista
-        partner_existente = self.repositorio_partners.obtener_por_email(dto.email)
-        if partner_existente:
-            raise EmailYaExiste(dto.email)
+        self.logger.info(f"Iniciando creación de partner con email: {dto.email}")
         
-        # Crear el partner
-        partner = Partner(
-            id="",  # Se generará automáticamente
-            nombre=dto.nombre,
-            email=dto.email,
-            telefono=dto.telefono,
-            direccion=dto.direccion,
-            estado=EstadoPartner.ACTIVO,
-            fecha_creacion=datetime.utcnow(),
-            fecha_actualizacion=None,
-            estado_kyc=EstadoKYC.PENDIENTE,
-            documentos_kyc=None,
-            integraciones=[]
-        )
-        
-        # Guardar en el repositorio
-        partner_guardado = self.repositorio_partners.guardar(partner)
-        
-        # Publicar evento de partner creado
-        evento = PartnerCreado(
-            partner_id=partner_guardado.id,
-            nombre=partner_guardado.nombre,
-            email=partner_guardado.email,
-            telefono=partner_guardado.telefono,
-            direccion=partner_guardado.direccion,
-            estado=partner_guardado.estado,
-            estado_kyc=partner_guardado.estado_kyc
-        )
-        self.despachador_eventos.publicar_evento(evento)
-        
-        return self.mapeador_partner.entidad_a_dto(partner_guardado)
+        try:
+            # Verificar que el email no exista
+            self.logger.debug(f"Verificando si el email {dto.email} ya existe")
+            partner_existente = self.repositorio_partners.obtener_por_email(dto.email)
+            if partner_existente:
+                self.logger.warning(f"Email {dto.email} ya existe, lanzando excepción")
+                raise EmailYaExiste(dto.email)
+            
+            self.logger.debug("Email no existe, procediendo con la creación")
+            
+            # Crear el partner
+            self.logger.debug("Creando entidad Partner")
+            partner = Partner(
+                id="",  # Se generará automáticamente
+                nombre=dto.nombre,
+                email=dto.email,
+                telefono=dto.telefono,
+                direccion=dto.direccion,
+                estado=EstadoPartner.ACTIVO,
+                fecha_creacion=datetime.utcnow(),
+                fecha_actualizacion=None,
+                estado_kyc=EstadoKYC.PENDIENTE,
+                documentos_kyc=None,
+                integraciones=[]
+            )
+            
+            self.logger.debug(f"Partner creado en memoria: {partner.nombre} - {partner.email}")
+            
+            # Guardar en el repositorio
+            self.logger.debug("Guardando partner en repositorio")
+            partner_guardado = self.repositorio_partners.guardar(partner)
+            self.logger.info(f"Partner guardado exitosamente con ID: {partner_guardado.id}")
+            
+            # Publicar evento de partner creado
+            self.logger.debug("Preparando evento PartnerCreado")
+            try:
+                evento = PartnerCreado(
+                    partner_id=partner_guardado.id,
+                    nombre=partner_guardado.nombre,
+                    email=partner_guardado.email,
+                    telefono=partner_guardado.telefono,
+                    direccion=partner_guardado.direccion,
+                    estado=partner_guardado.estado,
+                    estado_kyc=partner_guardado.estado_kyc
+                )
+                self.logger.debug(f"Evento PartnerCreado creado: {evento}")
+                
+                self.logger.debug("Publicando evento PartnerCreado")
+                self.despachador_eventos.publicar_evento(evento)
+                self.logger.info(f"Evento PartnerCreado publicado exitosamente para partner ID: {partner_guardado.id}")
+                
+            except Exception as e:
+                self.logger.error(f"Error al crear o publicar evento PartnerCreado: {str(e)}", exc_info=True)
+                # Re-lanzar la excepción para que el error sea visible
+                raise
+            
+            # Mapear a DTO de respuesta
+            self.logger.debug("Mapeando partner a DTO de respuesta")
+            response_dto = self.mapeador_partner.entidad_a_dto(partner_guardado)
+            self.logger.info(f"Partner creado exitosamente: {partner_guardado.id}")
+            
+            return response_dto
+            
+        except Exception as e:
+            self.logger.error(f"Error en crear_partner: {str(e)}", exc_info=True)
+            raise
     
     def actualizar_partner(self, partner_id: str, dto: ActualizarPartnerDTO) -> PartnerResponseDTO:
         """Actualizar un partner existente"""

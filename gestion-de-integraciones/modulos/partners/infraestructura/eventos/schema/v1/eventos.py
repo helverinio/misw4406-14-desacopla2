@@ -9,7 +9,7 @@ def time_millis():
 
 class EventoIntegracion(Record):
     """Clase base para eventos de integración siguiendo CloudEvents spec"""
-    id = String(default=str(uuid.uuid4()))
+    id = String()
     time = Long()
     ingestion = Long(default=time_millis())
     specversion = String()
