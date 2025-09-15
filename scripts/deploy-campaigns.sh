@@ -68,4 +68,5 @@ echo "🌐 Ingress status:"
 kubectl get ingress -n ${NAMESPACE}
 echo ""
 echo "🔗 Your application should be accessible at:"
-echo "   http://campaigns-service-587248656384-uc.a.run.app"
+echo "   http://<STATIC_IP>/campaigns"
+echo "   (Get the static IP with: kubectl get ingress alpespartners-api-ingress -n ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"

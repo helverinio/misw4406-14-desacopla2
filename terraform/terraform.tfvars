@@ -33,18 +33,12 @@ postgres_instances = {
     database_password = "integrations_password"
     instance_name = "integrations-postgres"
   }
-#   reporting_instance = {
-#     database_name = "reporting_database"
-#     database_user = "reporting_user"
-#     database_password = "R3p0rt!ng$ecure"
-#     instance_name = "reporting-postgres"
-#   }
-#   audit_instance = {
-#     database_name = "audit_database"
-#     database_user = "audit_user"
-#     database_password = "Aud1t@Tr@il2024"
-#     instance_name = "audit-postgres"
-#   }
+  alliances_instance = {
+    database_name = "alliances_database"
+    database_user = "alliances_user"
+    database_password = "alliances_password"
+    instance_name = "alliances-postgres"
+  }
 }
 
 
@@ -60,21 +54,11 @@ artifact_registry_repositories = {
     description   = "Docker repository for integrations-service application"
     keep_count    = 5
   }
-#   analytics_service = {
-#     repository_id = "analytics-service"
-#     description   = "Docker repository for analytics-service application"
-#     keep_count    = 5
-#   }
-#   reporting_service = {
-#     repository_id = "reporting-service"
-#     description   = "Docker repository for reporting-service application"
-#     keep_count    = 5
-#   }
-#   audit_service = {
-#     repository_id = "audit-service"
-#     description   = "Docker repository for audit-service application"
-#     keep_count    = 5
-#   }
+  alliances_service = {
+    repository_id = "alliances-service"
+    description   = "Docker repository for alliances-service application"
+    keep_count    = 5
+  }
 }
 
 # Kubernetes configuration (optional)

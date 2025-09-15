@@ -121,10 +121,10 @@ output "docker_registry_urls" {
   }
 }
 
-# Public IP for campaigns service ingress
-output "campaigns_service_public_ip" {
+# Public IP for alpespartners api ingress
+output "alpespartners_api_public_ip" {
   description = "Public IP address for the campaigns service ingress"
-  value       = google_compute_global_address.campaigns_service_ip.address
+  value       = google_compute_global_address.alpespartners_api_ip.address
 }
 
 # Kubernetes configuration

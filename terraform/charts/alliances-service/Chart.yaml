@@ -1,0 +1,19 @@
+apiVersion: v2
+name: alliances-service
+description: A Helm chart for AlpesPartners Alliances Service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - alpespartners
+  - alliances
+  - fastapi
+  - postgresql
+  - pulsar
+home: https://github.com/your-org/misw4406-14-desacopla2
+sources:
+  - https://github.com/your-org/misw4406-14-desacopla2
+maintainers:
+  - name: AlpesPartners Team
+    email: team@alpespartners.com
+dependencies: []

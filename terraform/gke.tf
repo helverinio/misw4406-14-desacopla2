@@ -1,6 +1,6 @@
-# Create a global static IP address for the campaigns service ingress
-resource "google_compute_global_address" "campaigns_service_ip" {
-  name = "campaigns-service-ip"
+# Create a global static IP address for the alpespartners api ingress
+resource "google_compute_global_address" "alpespartners_api_ip" {
+  name = "alpespartners-api-ip"
 }
 
 # Create GKE cluster

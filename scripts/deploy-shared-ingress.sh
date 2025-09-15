@@ -1,17 +1,16 @@
 #!/bin/bash
 
-# Deploy integrations-service using Helm
-# Usage: ./scripts/deploy-integrations.sh [release-name] [namespace]
+# Deploy shared ingress for all AlpesPartners services using Helm
+# Usage: ./scripts/deploy-shared-ingress.sh [release-name] [namespace]
 
 set -e
 
-# Configuration
-RELEASE_NAME=${1:-integrations-service}
+RELEASE_NAME=${1:-shared-ingress}
 NAMESPACE=${2:-alpespartners}
-CHART_PATH="terraform/charts/integrations-service"
-VALUES_FILE="terraform/charts/integrations-service/values.yaml"
+CHART_PATH="terraform/charts/shared-ingress"
+VALUES_FILE="terraform/charts/shared-ingress/values.yaml"
 
-echo "🚀 Deploying integrations-service with Helm..."
+echo "🚀 Deploying shared ingress for AlpesPartners services with Helm..."
 echo "Release: ${RELEASE_NAME}"
 echo "Namespace: ${NAMESPACE}"
 echo "Chart: ${CHART_PATH}"
@@ -59,14 +58,15 @@ else
         --create-namespace
 fi
 
-echo "✅ Successfully deployed integrations-service!"
-echo ""
-echo "📊 Deployment status:"
-kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=integrations-service
+echo "✅ Successfully deployed shared ingress!"
 echo ""
 echo "🌐 Ingress status:"
 kubectl get ingress -n ${NAMESPACE}
 echo ""
-echo "🔗 Your application should be accessible at:"
+echo "🔗 Your services will be accessible at:"
+echo "   http://<STATIC_IP>/campaigns"
+echo "   http://<STATIC_IP>/alliances"
 echo "   http://<STATIC_IP>/integrations"
-echo "   (Get the static IP with: kubectl get ingress alpespartners-api-ingress -n ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+echo ""
+echo "📋 To get the static IP address, run:"
+echo "   kubectl get ingress alpespartners-api-ingress -n ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'"

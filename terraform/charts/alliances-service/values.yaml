@@ -1,11 +1,11 @@
-# Default values for campaigns-service
+# Default values for alliances-service
 # This is a YAML-formatted file.
 
 replicaCount: 2
 
 image:
-  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/campaigns-service/campaigns-service
-  pullPolicy: IfNotPresent
+  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/alliances-service/alliances-service
+  pullPolicy: Always
   tag: "latest"
 
 imagePullSecrets: []
@@ -14,7 +14,7 @@ fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations:
     iam.gke.io/gcp-service-account: "app-sa@misw4406-2025-14-desacopla2.iam.gserviceaccount.com"
@@ -37,23 +37,23 @@ securityContext:
 service:
   type: NodePort
   port: 80
-  targetPort: 5000
+  targetPort: 8000
 
 ingress:
   enabled: false
   className: "gce"
   annotations:
     kubernetes.io/ingress.class: gce
-    kubernetes.io/ingress.global-static-ip-name: "campaigns-service-ip"
+    kubernetes.io/ingress.global-static-ip-name: "alliances-service-ip"
   hosts:
     - host: ""
       paths:
         - path: /
           pathType: Prefix
   tls: []
-  #  - secretName: campaigns-service-tls
+  #  - secretName: alliances-service-tls
   #    hosts:
-  #      - campaigns-service.local
+  #      - alliances-service.local
 
 resources:
   limits:
@@ -78,11 +78,10 @@ affinity: {}
 
 # Database configuration
 database:
-  host: "10.179.0.3"
+  host: "10.179.0.7"
   port: 5432
-  name: "campaigns_database"
-  user: "campaigns_user"
-  sslMode: "require"
+  name: "alliances_database"
+  user: "alliances_user"
 
 # Broker configuration
 broker:
@@ -90,46 +89,21 @@ broker:
 
 # Secrets configuration
 secrets:
-  # Y2hhbmdlbWU= -> campaigns password
-  postgresPassword: "WTJoaGJtZGxiV1U9"
+  postgresPassword: "YWxsaWFuY2VzX3Bhc3N3b3Jk"
 
 # Environment variables
 env:
-  - name: POSTGRES_HOST
-    valueFrom:
-      configMapKeyRef:
-        name: campaigns-service-config
-        key: POSTGRES_HOST
-  - name: POSTGRES_PORT
-    valueFrom:
-      configMapKeyRef:
-        name: campaigns-service-config
-        key: POSTGRES_PORT
-  - name: POSTGRES_DB
-    valueFrom:
-      configMapKeyRef:
-        name: campaigns-service-config
-        key: POSTGRES_DB
-  - name: POSTGRES_USER
-    valueFrom:
-      configMapKeyRef:
-        name: campaigns-service-config
-        key: POSTGRES_USER
-  - name: POSTGRES_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: campaigns-service-secrets
-        key: POSTGRES_PASSWORD
-  - name: BROKER_URL
-    valueFrom:
-      configMapKeyRef:
-        name: campaigns-service-config
-        key: BROKER_URL
+  - name: APP_NAME
+    value: "Gestion de alianzas app"
+  - name: LOG_LEVEL
+    value: "INFO"
+  - name: API_PREFIX
+    value: "/alliances"
 
 # Health check configuration
 healthCheck:
   enabled: true
-  path: /health
+  path: /posts/ping
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
@@ -138,7 +112,7 @@ healthCheck:
 # Liveness probe configuration
 livenessProbe:
   enabled: true
-  path: /health
+  path: /posts/ping
   initialDelaySeconds: 60
   periodSeconds: 30
   timeoutSeconds: 5
@@ -147,7 +121,7 @@ livenessProbe:
 # Readiness probe configuration
 readinessProbe:
   enabled: true
-  path: /health
+  path: /posts/ping
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
