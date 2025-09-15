@@ -45,12 +45,24 @@ class DespachadorEventosPartner:
         finally:
             cliente.close()
 
-    def publicar_evento(self, evento, topico='eventos-partners'):
+    def publicar_evento(self, evento, topico=None):
         """Publica un evento de dominio como evento de integración"""
         if not is_pulsar_available():
             print(f"⚠️  Pulsar no disponible. Evento {evento.__class__.__name__} no se publicó.")
             print("💡 Para habilitar eventos, inicia Pulsar con: docker-compose -f ../docker-compose.pulsar.yml up -d")
             return
+            
+        # Determinar el tópico basado en el tipo de evento si no se especifica
+        if topico is None:
+            topico_map = {
+                'PartnerCreado': 'eventos-partners-creado',
+                'PartnerActualizado': 'eventos-partners-actualizado',
+                'PartnerEliminado': 'eventos-partners-eliminado',
+                'KYCVerificado': 'eventos-kyc-verificado',
+                'IntegracionCreada': 'eventos-integraciones-creada',
+                'IntegracionRevocada': 'eventos-integraciones-revocada'
+            }
+            topico = topico_map.get(evento.__class__.__name__, 'eventos-partners-general')
             
         try:
             evento_integracion = self.mapper.entidad_a_dto(evento)
