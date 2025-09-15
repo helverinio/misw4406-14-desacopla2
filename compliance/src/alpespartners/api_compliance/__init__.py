@@ -8,8 +8,6 @@ from flask import Flask, jsonify
 from flask_swagger import swagger
 from sqlalchemy import text
 
-from alpespartners.api_programa import comenzar_consumidor
-
 def importar_modelos_alchemy():
     import alpespartners.modulos.compliance.infraestructura.dto
 

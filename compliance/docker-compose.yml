@@ -1,0 +1,45 @@
+services:
+
+  compliance-service-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: alpespartners
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres_user -d alpespartners -h 127.0.0.1"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - compliance-network
+
+  compliance-service:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "5004:5004"
+    environment:
+      POSTGRES_DB: alpespartners
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_HOST: compliance-service-db
+      POSTGRES_PORT: 5432
+      BROKER_URL: pulsar://broker:6650
+    depends_on:
+      compliance-service-db:
+        condition: service_healthy
+    networks:
+      - compliance-network
+
+volumes:
+  pgdata:
+
+networks:
+  compliance-network:
+    driver: bridge

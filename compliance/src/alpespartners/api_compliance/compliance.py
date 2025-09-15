@@ -1,6 +1,6 @@
 import logging
 import json
-from alpespartners.modulos.compliance.aplicacion.comandos.registrar_partner import RegistrarPartner
+from  alpespartners.modulos.compliance.aplicacion.comandos.registrar_partner import RegistrarPartner
 import alpespartners.seedwork.presentacion.api as api
 import alpespartners.seedwork.dominio.excepciones as ExceptionDominio
 

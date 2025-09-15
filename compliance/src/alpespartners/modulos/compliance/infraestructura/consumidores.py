@@ -1,5 +1,6 @@
 import logging
 import traceback
+from alpespartners.modulos.compliance.infraestructura.schema.v1.eventos import EventoContratoCreado
 import pulsar, _pulsar
 from pulsar.schema import *
 from alpespartners.seedwork.infrastructura.utils import broker_url

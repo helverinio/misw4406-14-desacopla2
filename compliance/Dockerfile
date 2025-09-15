@@ -31,7 +31,7 @@ RUN uv sync --frozen --no-dev
 COPY src/ ./src/
 
 # Expose port
-EXPOSE 5001
+EXPOSE 5004
 
 # Run the application
-CMD ["uv", "run", "flask", "--app", "src.alpespartners.api_compliance:create_app", "run", "--host=0.0.0.0", "--port=5001"]
+CMD ["uv", "run", "flask", "--app", "src.alpespartners.api_compliance:create_app", "run", "--host=0.0.0.0", "--port=5004"]

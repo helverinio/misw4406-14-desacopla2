@@ -2,7 +2,6 @@
 from alpespartners.modulos.compliance.dominio.repositorios import RepositorioCompliance
 from alpespartners.modulos.compliance.dominio.fabricas  import FabricaCompliance
 from alpespartners.modulos.compliance.dominio.fabricas  import FabricaCompliance
-from alpespartners.modulos.programas.dominio.repositorios import RepositorioProgramas
 from alpespartners.modulos.compliance.dominio.entidades import Payment
 from alpespartners.config.db import db
 from .mapeadores import MapeadorCompliance
