@@ -1,3 +1,4 @@
+from pulsar.schema import *
 from alpespartners.seedwork.infrastructura.schema.v1.eventos import EventoIntegracion
 from alpespartners.seedwork.infrastructura.utils import time_millis
 import uuid

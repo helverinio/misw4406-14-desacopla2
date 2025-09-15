@@ -30,12 +30,13 @@ services:
       POSTGRES_PASSWORD: 1234
       POSTGRES_HOST: compliance-service-db
       POSTGRES_PORT: 5432
-      BROKER_URL: pulsar://broker:6650
+      BROKER_URL: pulsar://broker:6650  # ✅ Cambiado a broker:6650
     depends_on:
       compliance-service-db:
         condition: service_healthy
     networks:
       - compliance-network
+      - misw4406-14-desacopla2_default  # ✅ Agregar red de Pulsar
 
 volumes:
   pgdata:
@@ -43,3 +44,5 @@ volumes:
 networks:
   compliance-network:
     driver: bridge
+  misw4406-14-desacopla2_default:  # ✅ Red externa donde está Pulsar
+    external: true

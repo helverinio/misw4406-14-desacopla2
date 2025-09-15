@@ -9,11 +9,12 @@ logging = logging.getLogger(__name__)
 
 
 def suscribirse_a_eventos():
+    logging.info("Iniciando consumidor de eventos de compliance...")
     cliente = None
     try:
         cliente = pulsar.Client(broker_url())
         consumidor = cliente.subscribe(
-            "comandos-compliance",
+            "administracion-financiera-compliance",
             consumer_type=_pulsar.ConsumerType.Shared,
             subscription_name="administracion-financiera-compliance",
             schema=AvroSchema(EventoContratoCreado),
