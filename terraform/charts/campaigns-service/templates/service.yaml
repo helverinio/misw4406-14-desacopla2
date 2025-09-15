@@ -4,6 +4,10 @@ metadata:
   name: {{ include "campaigns-service.fullname" . }}
   labels:
     {{- include "campaigns-service.labels" . | nindent 4 }}
+  {{- if .Values.service.backendConfig }}
+  annotations:
+    cloud.google.com/backend-config: '{"default": "{{ .Values.service.backendConfig }}"}'
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:

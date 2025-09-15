@@ -38,6 +38,7 @@ service:
   type: NodePort
   port: 80
   targetPort: 8000
+  backendConfig: "alliances-backend-config"
 
 ingress:
   enabled: false

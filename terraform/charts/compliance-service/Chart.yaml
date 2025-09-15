@@ -1,0 +1,18 @@
+apiVersion: v2
+name: compliance-service
+description: A Helm chart for AlpesPartners compliance Service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - alpespartners
+  - compliance
+  - flask
+  - postgresql
+home: https://github.com/your-org/misw4406-14-desacopla2
+sources:
+  - https://github.com/your-org/misw4406-14-desacopla2
+maintainers:
+  - name: AlpesPartners Team
+    email: team@alpespartners.com
+dependencies: []

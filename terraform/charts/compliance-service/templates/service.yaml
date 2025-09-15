@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "integrations-service.fullname" . }}
+  name: {{ include "compliance-service.fullname" . }}
   labels:
-    {{- include "integrations-service.labels" . | nindent 4 }}
+    {{- include "compliance-service.labels" . | nindent 4 }}
   {{- if .Values.service.backendConfig }}
   annotations:
     cloud.google.com/backend-config: '{"default": "{{ .Values.service.backendConfig }}"}'
@@ -16,4 +16,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "integrations-service.selectorLabels" . | nindent 4 }}
+    {{- include "compliance-service.selectorLabels" . | nindent 4 }}

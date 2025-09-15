@@ -39,6 +39,12 @@ postgres_instances = {
     database_password = "alliances_password"
     instance_name = "alliances-postgres"
   }
+  compliance_instance = {
+    database_name = "compliance_database"
+    database_user = "compliance_user"
+    database_password = "compliance_password"
+    instance_name = "compliance-postgres"
+  }
 }
 
 
@@ -57,6 +63,11 @@ artifact_registry_repositories = {
   alliances_service = {
     repository_id = "alliances-service"
     description   = "Docker repository for alliances-service application"
+    keep_count    = 5
+  }
+  compliance_service = {
+    repository_id = "compliance-service"
+    description   = "Docker repository for compliance-service application"
     keep_count    = 5
   }
 }

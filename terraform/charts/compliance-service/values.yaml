@@ -1,11 +1,11 @@
-# Default values for campaigns-service
+# Default values for compliance-service
 # This is a YAML-formatted file.
 
 replicaCount: 2
 
 image:
-  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/campaigns-service/campaigns-service
-  pullPolicy: IfNotPresent
+  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/compliance-service/compliance-service
+  pullPolicy: Always
   tag: "latest"
 
 imagePullSecrets: []
@@ -14,7 +14,7 @@ fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations:
     iam.gke.io/gcp-service-account: "app-sa@misw4406-2025-14-desacopla2.iam.gserviceaccount.com"
@@ -38,15 +38,15 @@ service:
   type: NodePort
   port: 80
   targetPort: 5000
-  backendConfig: "campaigns-backend-config"
+  backendConfig: "compliance-backend-config"
 
 ingress:
   enabled: false
 
   tls: []
-  #  - secretName: campaigns-service-tls
+  #  - secretName: compliance-service-tls
   #    hosts:
-  #      - campaigns-service.local
+  #      - compliance-service.local
 
 resources:
   limits:
@@ -71,10 +71,10 @@ affinity: {}
 
 # Database configuration
 database:
-  host: "10.179.0.3"
+  host: "10.179.0.9"
   port: 5432
-  name: "campaigns_database"
-  user: "campaigns_user"
+  name: "compliance_database"
+  user: "compliance_user"
   sslMode: "require"
 
 # Broker configuration
@@ -83,40 +83,40 @@ broker:
 
 # Secrets configuration
 secrets:
-  # Y2hhbmdlbWU= -> campaigns password
-  postgresPassword: "WTJoaGJtZGxiV1U9"
+  # Y2hhbmdlbWU= -> compliance password
+  postgresPassword: "Y29tcGxpYW5jZV9wYXNzd29yZA=="
 
 # Environment variables
 env:
   - name: POSTGRES_HOST
     valueFrom:
       configMapKeyRef:
-        name: campaigns-service-config
+        name: compliance-service-config
         key: POSTGRES_HOST
   - name: POSTGRES_PORT
     valueFrom:
       configMapKeyRef:
-        name: campaigns-service-config
+        name: compliance-service-config
         key: POSTGRES_PORT
   - name: POSTGRES_DB
     valueFrom:
       configMapKeyRef:
-        name: campaigns-service-config
+        name: compliance-service-config
         key: POSTGRES_DB
   - name: POSTGRES_USER
     valueFrom:
       configMapKeyRef:
-        name: campaigns-service-config
+        name: compliance-service-config
         key: POSTGRES_USER
   - name: POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: campaigns-service-secrets
+        name: compliance-service-secrets
         key: POSTGRES_PASSWORD
   - name: BROKER_URL
     valueFrom:
       configMapKeyRef:
-        name: campaigns-service-config
+        name: compliance-service-config
         key: BROKER_URL
 
 # Health check configuration

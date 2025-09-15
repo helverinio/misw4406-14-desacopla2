@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "compliance-service.fullname" . }}-config
+  labels:
+    {{- include "compliance-service.labels" . | nindent 4 }}
+data:
+  POSTGRES_HOST: {{ .Values.database.host | quote }}
+  POSTGRES_PORT: {{ .Values.database.port | quote }}
+  POSTGRES_DB: {{ .Values.database.name | quote }}
+  POSTGRES_USER: {{ .Values.database.user | quote }}
+  BROKER_URL: {{ .Values.broker.url | quote }}

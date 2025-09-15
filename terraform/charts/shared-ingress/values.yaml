@@ -32,6 +32,13 @@ ingress:
       path: "/integrations"
       pathType: "Prefix"
       port: 80
+    - name: "compliance-service"
+      path: "/compliance"
+      pathType: "Prefix"
+      port: 80
+
+backendConfig:
+  enabled: true
 
 # Global configuration
 global:

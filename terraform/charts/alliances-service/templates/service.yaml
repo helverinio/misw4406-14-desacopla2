@@ -4,6 +4,10 @@ metadata:
   name: {{ include "alliances-service.fullname" . }}
   labels:
     {{- include "alliances-service.labels" . | nindent 4 }}
+  {{- if .Values.service.backendConfig }}
+  annotations:
+    cloud.google.com/backend-config: '{"default": "{{ .Values.service.backendConfig }}"}'
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:

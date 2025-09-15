@@ -38,6 +38,7 @@ service:
   type: NodePort
   port: 80
   targetPort: 5001
+  backendConfig: "integrations-backend-config"
 
 ingress:
   enabled: false

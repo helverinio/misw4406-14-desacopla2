@@ -55,4 +55,4 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
 # Comando para ejecutar la aplicación
-CMD ["uv", "run", "python", "app.py"]
+CMD ["python", "app.py"]
