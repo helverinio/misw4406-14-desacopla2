@@ -257,7 +257,7 @@ Usar los comandos de Docker Compose mostrados anteriormente.
 
 - **Carlos Garcia**: Arquitectura base, configuración Pulsar y despliegue
 - **Miguel Gomez**: Gestión de Alianzas (FastAPI), Docker Compose, eventos
-- **Helvert Wiesner**: Compliance, configuración BD, testing
+- **Helvert Wiesner**: Compliance
 - **Orlando Arnedo**: Gestión de Integraciones
 
 ### Commits y Pull Requests
