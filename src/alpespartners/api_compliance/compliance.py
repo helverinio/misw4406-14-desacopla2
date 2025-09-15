@@ -1,5 +1,6 @@
 import logging
 import json
+from alpespartners.modulos.compliance.aplicacion.comandos.registrar_partner import RegistrarPartner
 import alpespartners.seedwork.presentacion.api as api
 import alpespartners.seedwork.dominio.excepciones as ExceptionDominio
 
@@ -25,9 +26,13 @@ def register_compliance():
         payment_dto = map_payment.externo_a_dto(data)
         logger.info(f"Mapped payment DTO: {payment_dto}")
 
-        comando: ComandoResultado = ejecutar_commando()
+        comando: ComandoResultado = ejecutar_commando(RegistrarPartner(
+            partner_id=payment_dto.partnerId,
+            state=payment_dto.state,
+            enable_at=payment_dto.enable_at
+        ))
 
-        return map_payment.dto_a_externo(payment_dto)
+        return Response('{}', status=202, mimetype='application/json')
 
     except ExceptionDominio as e:
         logger.error(f"Error in compliance registration: {e}")
