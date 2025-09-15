@@ -5,7 +5,7 @@ from .mapeadores import MapeadorEventoDominioPartner
 
 def broker_url():
     """Get broker URL from environment variable"""
-    return os.getenv('BROKER_URL', 'pulsar://localhost:6650')
+    return os.getenv('BROKER_URL', 'pulsar://broker:6650')
 
 def is_pulsar_available():
     """Check if Pulsar broker is available"""
