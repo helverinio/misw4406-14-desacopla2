@@ -1,30 +1,28 @@
 import logging
+import os
 
-#importar blueprint
-from alpespartners.api import programa
+# importar blueprint
+from alpespartners.api_compliance import compliance
 
 from flask import Flask, jsonify
 from flask_swagger import swagger
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-import os
 
 def importar_modelos_alchemy():
-    import alpespartners.modulos.programas.infraestructura.dto
+    import alpespartners.modulos.compliance.infraestructura.dto
 
 def comenzar_consumidor():
     import threading
-    import alpespartners.modulos.notificaciones.infraestructura.consumidores as notificaciones
+    import alpespartners.modulos.compliance.infraestructura.consumidores as compliance
 
     # Suscripción a eventos
-    threading.Thread(target=notificaciones.suscribirse_a_eventos).start()
-
+    threading.Thread(target=compliance.suscribirse_a_eventos).start()
 
 def create_app(configuracion={}):
     import logging
     logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("alpespartners.api")
-    logger.info("Iniciando la aplicación Flask...")
+    logger = logging.getLogger("alpespartners.api_compliance")
+    logger.info("Iniciando la aplicación Flask de Compliance...")
     # Init de la aplicación e Flask
     app = Flask(__name__, instance_relative_config=True)
 
@@ -48,36 +46,36 @@ def create_app(configuracion={}):
             db.create_all()
             comenzar_consumidor()
 
-        logger.info("Base de datos inicializada correctamente.")
+        logger.info("Base de datos de compliance inicializada correctamente.")
     except Exception as e:
-        logger.error(f"Error al inicializar la base de datos: {e}")
+        logger.error(f"Error al inicializar la base de datos de compliance: {e}")
 
-    app.register_blueprint(programa.bp)
+    app.register_blueprint(compliance.bp)
 
     @app.route("/spec")
     def spec():
-        logger = logging.getLogger("alpespartners.api")
+        logger = logging.getLogger("alpespartners.api_compliance")
         logger.info("Ruta /spec llamada")
         swag = swagger(app)
+        swag['info']['title'] = "API de Compliance de Alpes Partners"
         swag['info']['version'] = "1.0"
-        swag['info']['title'] = "My API"
         return jsonify(swag)
-
+    
     @app.route("/health")
     def health():
         # Prueba de conexión a la base de datos
         import logging
-        logger = logging.getLogger("alpespartners.api")
+        logger = logging.getLogger("alpespartners.api_compliance")
         logger.info("Ruta /health llamada")
 
         try:
             db.session.execute(text('SELECT 1'))
             db_status = "connected"
-            logger.info("Conexión a la base de datos exitosa.")
+            logger.info("Conexión a la base de datos de compliance exitosa.")
         except Exception as e:
             db_status = f"error: {str(e)}"
-            logger.error(f"Error de conexión a la base de datos: {e}")
+            logger.error(f"Error de conexión a la base de datos de compliance: {e}")
         return {"status": "up", "db_status": db_status}
 
-    logger.info("Aplicación Flask inicializada correctamente.")
+    logger.info("Aplicación Flask de compliance inicializada correctamente.")
     return app
