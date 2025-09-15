@@ -11,8 +11,11 @@ services:
     depends_on:
       - postgres
     # volumes:
-    #   - .:/app
-    # working_dir: /app
+      # - .:/app  # Commented out to avoid overwriting container's .venv directory
+    working_dir: /app
+    networks:
+      - default
+      - main_default
 
   postgres:
     image: postgres:15

@@ -5,7 +5,9 @@ Aplicación principal para el servicio de Gestión de Integraciones y CRM Partne
 
 from api import crear_app
 from config.db import db
-from os import environ
+from config.logging_config import configure_logging
+import threading
+import logging
 
 def main():
     """Función principal para ejecutar la aplicación"""
@@ -15,9 +17,7 @@ def main():
     logger.info("🚀 Iniciando aplicación de Gestión de Integraciones y CRM Partners")
     
     # Crear la aplicación Flask
-    app = crear_app({
-        'SQLALCHEMY_DATABASE_URI': environ.get('SQLALCHEMY_DATABASE_URI')
-    })
+    app = crear_app()
     
     # Crear las tablas de base de datos
     with app.app_context():
