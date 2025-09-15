@@ -38,11 +38,9 @@ AlpesPartners es una plataforma de gestión de alianzas estratégicas implementa
   - Validaciones de compliance
   - Reportes financieros
 
-#### 4. Ejecución y Medición de Campañas `campanas/`
+#### 4. Administración de Campañas `campanas/`
 **Responsabilidad**: Gestión de campañas de marketing
-- **Estado**: En desarrollo
-- **Funcionalidades planificadas**:
-  - Creación y administración de campañas
+- **Estado**: Creacion de campañás
 
 ### Flujo de Integración de Partners
 
