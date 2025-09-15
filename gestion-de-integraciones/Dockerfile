@@ -32,17 +32,17 @@ COPY pyproject.toml .
 COPY uv.lock .
 COPY README.md .
 
-# Install dependencies using uv
+# Set ownership of /app directory to appuser
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user before installing dependencies
+USER appuser
+
+# Install dependencies using uv as appuser
 RUN uv sync --locked --no-dev
 
 # Copiar código fuente
-COPY . .
-
-# Set ownership of app directory
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
+COPY --chown=appuser:appuser . .
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
@@ -55,4 +55,4 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
 # Comando para ejecutar la aplicación
-CMD ["python", "app.py"]
+CMD ["uv", "run", "python", "app.py"]

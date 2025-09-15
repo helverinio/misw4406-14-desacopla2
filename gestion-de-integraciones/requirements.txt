@@ -3,3 +3,4 @@ Flask-SQLAlchemy==3.1.1
 flask-swagger==0.2.14
 psycopg2-binary>=2.9.0
 python-dotenv>=1.0.0
+pulsar-client>=3.0.0

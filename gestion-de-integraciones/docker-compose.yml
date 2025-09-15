@@ -7,11 +7,15 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@postgres:5432/partners_db
+      - BROKER_URL=pulsar://broker:6650
     depends_on:
       - postgres
     # volumes:
-    #   - .:/app
-    # working_dir: /app
+      # - .:/app  # Commented out to avoid overwriting container's .venv directory
+    working_dir: /app
+    networks:
+      - default
+      - main_default
 
   postgres:
     image: postgres:15
@@ -26,3 +30,8 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  main_default:
+    external: true
+    name: misw4406-14-desacopla2_default
