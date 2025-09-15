@@ -1,0 +1,109 @@
+# Default values for shared-ingress with Gateway API
+# This is a YAML-formatted file.
+
+# Gateway API configuration
+gateway:
+  enabled: true
+  name: alpespartners-api-gateway
+  className: "gke-l7-global-external-managed"
+  annotations:
+    # GKE specific annotations
+    networking.gke.io/load-balancer-type: "External"
+    networking.gke.io/managed-certificates: "alpespartners-api-cert"
+  
+  # Host configuration (set to empty string for IP-based access)
+  host: ""
+  
+  # HTTP listener configuration
+  http:
+    enabled: true
+    port: 80
+  
+  # HTTPS listener configuration
+  https:
+    enabled: false
+    port: 443
+  
+  # TLS configuration
+  tls:
+    enabled: false
+    secretName: "alpespartners-api-tls"
+  
+  # Static IP configuration
+  staticIP:
+    enabled: true
+    address: "alpespartners-api-ip"  # e.g., "34.102.136.180" or "alpespartners-api-ip"
+  
+  # Health check configuration
+  healthCheck:
+    interval: "10s"
+    timeout: "5s"
+    unhealthyThreshold: 3
+    healthyThreshold: 1
+    path: "/health"
+    port: 80
+    protocol: "HTTP"
+  
+  # HTTPRoute configuration with URL rewriting
+  routes:
+    - name: "campaigns"
+      pathPrefix: "/campaigns"
+      service:
+        name: "campaigns-service"
+        port: 80
+        weight: 100
+      rewrite:
+        path:
+          type: "ReplacePrefixMatch"
+          replacePrefixMatch: "/"
+      annotations: {}
+    
+    - name: "alliances"
+      pathPrefix: "/alliances"
+      service:
+        name: "alliances-service"
+        port: 80
+        weight: 100
+      rewrite:
+        path:
+          type: "ReplacePrefixMatch"
+          replacePrefixMatch: "/"
+      annotations: {}
+      healthCheck:
+        path: "/posts/ping"
+    
+    - name: "integrations"
+      pathPrefix: "/integrations"
+      service:
+        name: "integrations-service"
+        port: 80
+        weight: 100
+      rewrite:
+        path:
+          type: "ReplacePrefixMatch"
+          replacePrefixMatch: "/"
+      annotations: {}
+    
+    - name: "compliance"
+      pathPrefix: "/compliance"
+      service:
+        name: "compliance-service"
+        port: 80
+        weight: 100
+      rewrite:
+        path:
+          type: "ReplacePrefixMatch"
+          replacePrefixMatch: "/"
+      annotations: {}
+
+# Gateway API configuration
+# Note: BackendConfig is not used with Gateway API
+# Health checks and timeouts are configured via Gateway and HTTPRoute resources
+
+# Legacy ingress configuration (disabled by default)
+ingress:
+  enabled: false
+
+# Global configuration
+global:
+  namespace: "alpespartners"

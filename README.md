@@ -1,186 +1,298 @@
-# misw4406-14-desacopla2
-proyecto analisis y modelado de datos
+# AlpesPartners - Arquitectura de Microservicios Basada en Eventos
 
-# alpesPartners
-## Sin Docker
-### Instalar dependencias con uv
+## Descripción del Proyecto
+
+AlpesPartners es una plataforma de gestión de alianzas estratégicas implementada mediante una arquitectura de microservicios basada en eventos. El sistema maneja el ciclo completo desde la integración de partners hasta la ejecución de campañas, siguiendo los principios de Domain-Driven Design (DDD) y Event-Driven Architecture (EDA).
+
+## Arquitectura del Sistema
+
+### Microservicios Desarrollados
+
+#### 1. Gestión de Integraciones `gestion-de-integraciones/`
+**Responsabilidad**: Registro y gestión de partners externos
+- **Tecnología**: Flask + SQLAlchemy
+- **Base de Datos**: PostgreSQL (Puerto 5432)
+- **API REST**: Puerto 5000
+- **Funcionalidades**:
+  - Creación de partners
+  - Gestión de programas de afiliación
+  - Validación de datos de integración
+
+#### 2. Gestión Integral de Alianzas `gestion-de-alianzas/`
+**Responsabilidad**: Administración de contratos y términos comerciales
+- **Tecnología**: FastAPI + SQLAlchemy
+- **Base de Datos**: PostgreSQL (Puerto 5435)
+- **API REST**: Puerto 8000
+- **Funcionalidades**:
+  - Creación automática de contratos
+  - Gestión de términos comerciales
+  - Estados de contratos (Activo, Inactivo, Vencido)
+
+#### 3. Administración Financiera y Compliance `compliance/`
+**Responsabilidad**: Validación financiera y cumplimiento normativo
+- **Tecnología**: Flask + SQLAlchemy
+- **Base de Datos**: PostgreSQL (Puerto 5434)
+- **API REST**: Puerto 5004
+- **Funcionalidades**:
+  - Alta de partners en sistema financiero
+  - Validaciones de compliance
+  - Reportes financieros
+
+#### 4. Administración de Campañas `src/alpespartners`
+**Responsabilidad**: Gestión de campañas de marketing
+- **Estado**: Creacion de campañás
+
+### Flujo de Integración de Partners
+
+```mermaid
+graph LR
+    A[Cliente API] --> B[Gestión Integraciones]
+    B --> C[Evento: Partner Creado]
+    C --> D[Gestión Alianzas]
+    D --> E[Evento: Contrato Creado]
+    E --> F[Compliance]
+    F --> G[Partner Activo]
+```
+
+1. **Creación de Partner**: Cliente envía datos a Gestión de Integraciones vía API REST
+2. **Evento de Integración**: Se genera evento `PartnerCreado` en Apache Pulsar
+3. **Creación de Contrato**: Gestión de Alianzas recibe evento y crea contrato automáticamente
+4. **Evento de Contrato**: Se genera evento `ContratoCreado` 
+5. **Alta Financiera**: Compliance recibe evento y da de alta al partner en sistema financiero
+
+## Decisiones Arquitectónicas
+
+### 1. Comunicación Basada en Eventos
+
+**Patrón Seleccionado**: Eventos de Integración con carga mínima de estado
+- **Justificación**: Balance entre acoplamiento débil y eficiencia
+- **Tecnología**: Apache Pulsar como message broker
+- **Esquema de Eventos**: JSON con validación de esquemas
+
+**Ejemplo de Evento**:
+```json
+{
+  "eventType": "PartnerCreado",
+  "timestamp": "2025-09-15T03:38:34Z",
+  "partnerId": "uuid-123",
+  "data": {
+    "nombre": "Partner ABC",
+    "tipo": "CORPORATIVO"
+  }
+}
+```
+
+### 2. Patrones de Almacenamiento 
+
+**Modelo Híbrido Implementado**:
+- **CRUD Clásico**: Gestión de Integraciones, Compliance
+  - Justificación: Operaciones simples, consultas directas
+- **Event Sourcing**: Gestión de Alianzas (parcial)
+  - Justificación: Trazabilidad de cambios en contratos
+  - Implementación: Eventos de dominio + snapshots
+
+### 3. Persistencia Descentralizada
+
+Cada microservicio maneja su propia base de datos:
+- **Gestión Integraciones**: PostgreSQL independiente
+- **Gestión Alianzas**: PostgreSQL independiente  
+- **Compliance**: PostgreSQL independiente
+- **Ventajas**: Autonomía, escalabilidad independiente, tecnologías específicas
+
+## Infraestructura y Despliegue
+
+### Apache Pulsar Configuración Local
+```yaml
+services:
+  zookeeper:
+    image: apachepulsar/pulsar:3.2.4
+    ports: ["2181:2181"]
+  
+  broker:
+    image: apachepulsar/pulsar:3.2.4
+    ports: ["6650:6650", "8081:8080"]
+    
+  bookkeeper:
+    image: apachepulsar/pulsar:3.2.4
+```
+
+### Docker Compose Structure
 ```bash
-# Instalar todas las dependencias
+# Levantar infraestructura base (Pulsar)
+docker-compose -f docker-compose.pulsar.yml up -d
+
+# Levantar microservicios
+docker-compose up --build
+
+# Servicios individuales
+cd gestion-de-alianzas && docker-compose up --build
+cd compliance && docker-compose up --build
+```
+
+### Tecnologías Utilizadas
+
+- **Lenguaje**: Python 3.12
+- **Frameworks Web**: Flask, FastAPI
+- **ORM**: SQLAlchemy 2.0
+- **Base de Datos**: PostgreSQL 16
+- **Message Broker**: Apache Pulsar 3.2.4
+- **Contenedores**: Docker + Docker Compose
+- **Gestión de Dependencias**: uv
+
+## APIs Disponibles
+
+### Gestión de Integraciones (Puerto 5000)
+```bash
+POST /programas        
+GET  /programas/{id} 
+```
+
+### Gestión de Alianzas (Puerto 8000)
+```bash
+POST /contratos          
+GET  /contratos/{id}     
+PUT  /contratos/{id}     
+```
+
+### Compliance (Puerto 5004)
+```bash
+GET  /health           
+POST /partners/validate 
+```
+
+## Entrega Parcial - Cumplimiento de Requisitos
+
+### Requisitos Completados (Entrega 4)
+
+1. **Arquitectura de Microservicios Basada en Eventos**: 
+   - 4 microservicios independientes
+   - Comunicación asíncrona con Apache Pulsar
+
+2. **Eventos de Integración con Carga Mínima**:
+   - Esquema JSON definido
+   - Eventos `PartnerCreado` y `ContratoCreado`
+
+3. **Apache Pulsar como Message Broker**: 
+   - Configuración con ZooKeeper y BookKeeper
+   - Tópicos: `gestion-de-integraciones`, `administracion-financiera-compliance`
+
+4. **Persistencia Descentralizada**:
+   - Cada microservicio con su BD PostgreSQL
+   - Puertos independientes
+
+5. **Modelos CRUD y Event Sourcing**:
+   - CRUD: Integraciones, Compliance
+   - Event Sourcing: Alianzas (eventos de dominio)
+
+6. **Despliegue con Docker**: 
+   - Docker Compose para cada servicio
+   - Configuración de redes y volúmenes
+
+
+## Instalación y Ejecución
+
+### Prerrequisitos
+- Docker y Docker Compose
+- Python 3.12+
+- uv (gestor de dependencias)
+
+### Ejecución Completa
+
+```bash
+# 1. Clonar repositorio
+git clone <repository-url>
+cd misw4406-14-desacopla2
+
+# 2. Levantar Apache Pulsar
+docker-compose -f docker-compose.pulsar.yml up -d
+
+# 3. Verificar que Pulsar esté corriendo
+docker ps | grep pulsar
+
+# 4. Levantar servicios principales
+docker-compose up --build
+
+# 5. Levantar servicios adicionales
+cd gestion-de-alianzas
+docker-compose up --build -d
+
+cd ../compliance  
+docker-compose up --build -d
+```
+
+### Verificación de Servicios
+
+```bash
+# Health checks
+curl http://34.111.239.116/health          # Gestión Integraciones
+curl http://34.144.243.152/docs           # Gestión Alianzas (Swagger)
+curl http://34.111.90.7/health        # Compliance
+
+```
+
+## Desarrollo Local
+
+### Sin Docker
+
+```bash
+# Instalar dependencias
 uv sync
 
-# O instalar solo las dependencias de producción
-uv sync --no-dev
+# Configurar PYTHONPATH
+export PYTHONPATH="./src"  # Linux/Mac
+$env:PYTHONPATH=".\src"    # Windows PowerShell
+
+# Ejecutar servicios individuales
+uv run flask --app alpespartners.api run  # Puerto 5000
+cd gestion-de-alianzas && uvicorn src.entrypoints.api.main:app --reload  # Puerto 8000
 ```
 
-### Ejecutar alpespartners.api
-```bash
-# Con uv (recomendado)
-uv run flask --app alpespartners.api run
+### Con Docker (Recomendado)
 
-# O tradicionalmente
-flask --app alpespartners.api run
-```
+Usar los comandos de Docker Compose mostrados anteriormente.
 
-Si no encuentra el modulo de alpespartners ejecutar 
-```bash
-$env:PYTHONPATH="E:\miso\8monoliticas\misw4406-14-desacopla2\src"   
-```
-e intentar iniciar nuevamente
+## Contribuciones del Equipo
 
-### Comandos útiles de uv
-```bash
-# Agregar una nueva dependencia
-uv add <package-name>
+### Distribución de Actividades
 
-# Agregar una dependencia de desarrollo
-uv add --dev <package-name>
+- **Carlos Garcia**: Arquitectura base, configuración Pulsar y despliegue
+- **Miguel Gomez**: Gestión de Alianzas (FastAPI), Docker Compose, eventos
+- **Helvert Wiesner**: Compliance
+- **Orlando Arnedo**: Gestión de Integraciones
 
-# Actualizar dependencias
-uv lock --upgrade
+### Commits y Pull Requests
+Las contribuciones están registradas en el control de versiones con commits equitativos entre los miembros del equipo.
 
-# Ejecutar comandos en el entorno virtual
-uv run <command>
-```
+---
 
-# Ejecutar la aplicación usando Docker-compose
-```bash
-docker-compose up --build
-```
+## Documentación Técnica
 
-# Crear carpeta de persistencia de estado de zookeper / bookkeeper y elevar privilegios
-```bash
-sudo mkdir -p ./data/zookeeper ./data/bookkeeper
-sudo chown -R 10000 data
-```
+### Estructura DDD por Microservicio
 
-## Servicios disponibles
-
-- **Web App**: http://localhost:5000 - Aplicación Flask principal
-- **PostgreSQL**: localhost:5433 - Base de datos
-- **Apache Pulsar**: 
-  - Service URL: pulsar://localhost:6650
-  - Admin URL: http://localhost:8080
-
-## Colección de postman
-Nuestro servicio cuenta con una coleccion de postman donde puedes interactuar con los siguientes servicios:
-
-1. POST /programas
-2. GET /programas/:id
-
-[Link a postman](/postman/AlpesPartners.postman_collection.json)
-
-# Arquitectura del Proyecto (DDD)
-
-## Estructura de Carpetas
+Cada microservicio sigue la estructura DDD:
 
 ```
 src/
-└── alpespartners/
-    ├── api/                     # Capa de Presentación
-    │   ├── __init__.py         # Configuración y factory de la aplicación Flask
-    │   └── programa.py         # Controladores REST para el módulo de programas
-    │
-    ├── config/                 # Configuración de infraestructura
-    │   └── db.py              # Configuración de SQLAlchemy
-    │
-    ├── modulos/               # Contextos Acotados (Bounded Contexts)
-    │   └── programas/         # Módulo de Programas de Afiliación
-    │       ├── aplicacion/    # Capa de Aplicación
-    │       │   ├── comandos/  # Comandos (CQS)
-    │       │   │   └── crear_programa.py
-    │       │   ├── queries/   # Consultas (CQS)
-    │       │   │   └── obtener_programa.py
-    │       │   ├── dto.py     # Data Transfer Objects
-    │       │   ├── mapeadores.py # Mappers entre capas
-    │       │   └── servicios.py  # Servicios de aplicación
-    │       │
-    │       ├── dominio/       # Capa de Dominio
-    │       │   ├── entidades.py    # Entidades del dominio (Programa, Afiliacion)
-    │       │   ├── eventos.py      # Eventos de dominio
-    │       │   ├── excepciones.py  # Excepciones del dominio
-    │       │   ├── fabricas.py     # Factory pattern
-    │       │   ├── objetos_valor.py # Value Objects (Vigencia, Terminos)
-    │       │   └── repositorios.py # Interfaces de repositorios
-    │       │
-    │       └── infraestructura/ # Capa de Infraestructura
-    │           ├── dto.py       # DTOs para persistencia
-    │           ├── mapeadores.py # Mappers ORM
-    │           └── repositorios.py # Implementación de repositorios
-    │
-    └── seedwork/              # Código Compartido (Shared Kernel)
-        ├── aplicacion/        # Abstracciones de aplicación
-        │   ├── comandos.py    # Base para comandos
-        │   ├── dto.py         # DTOs base
-        │   └── queries.py     # Base para consultas
-        │
-        └── dominio/           # Abstracciones de dominio
-            ├── entidades.py   # Entidad base, Agregación Raíz
-            ├── eventos.py     # Eventos base
-            ├── excepciones.py # Excepciones base
-            ├── mixins.py      # Mixins de validación
-            ├── reglas.py      # Reglas de negocio base
-            └── repositorio.py # Interfaces base de repositorios
+├── domain/           # Entidades, Value Objects, Eventos
+├── application/      # Use Cases, Comandos, Queries  
+├── infrastructure/   # Repositorios, BD, Message Brokers
+├── entrypoints/      # APIs REST, Consumidores de eventos
+└── adapters/         # Adaptadores externos
 ```
 
-## Módulos Desarrollados
+### Eventos de Dominio Implementados
 
-### 1. Módulo de Programas (`modulos/programas/`)
-Contexto acotado que maneja la gestión de programas de afiliación y sus afiliaciones asociadas.
+```python
+# Ejemplo: PartnerCreado
+@dataclass
+class PartnerCreado:
+    partner_id: str
+    nombre: str
+    tipo: TipoPartner
+    timestamp: datetime
+```
 
-**Entidades principales:**
-- `Programa`: Agregación raíz que representa un programa de afiliación
-- `Afiliacion`: Entidad que representa la afiliación de un partner a un programa
+### Video de la entrega 4 
+[entrega 4 desacoplados](https://youtu.be/u21-_RgLSeY)
 
-**Objetos de Valor:**
-- `Vigencia`: Período de tiempo del programa (inicio/fin)
-- `Terminos`: Condiciones comerciales (moneda, tarifa base, tope)
 
-**Casos de Uso:**
-- Crear programa de afiliación
-- Obtener programa por ID
-- Gestionar afiliaciones
-
-### 2. Seedwork (`seedwork/`)
-Código compartido entre todos los contextos acotados que implementa:
-
-- **Entidades base**: Patrón Entity con ID inmutable
-- **Agregación Raíz**: Base para agregaciones con eventos de dominio
-- **Comandos y Consultas**: Implementación del patrón CQS
-- **Repositorios**: Interfaces base para persistencia
-- **Eventos de Dominio**: Infraestructura para comunicación entre módulos
-
-## Capas de la Arquitectura
-
-### Capa de Presentación (`api/`)
-- Controladores REST con Flask
-- Manejo de rutas HTTP
-- Serialización/deserialización JSON
-
-### Capa de Aplicación (`modulos/{modulo}/aplicacion/`)
-- Servicios de aplicación
-- Comandos y consultas (CQS)
-- Coordinación de casos de uso
-- Mapeo entre DTOs y entidades
-
-### Capa de Dominio (`modulos/{modulo}/dominio/`)
-- Entidades y agregaciones
-- Objetos de valor
-- Eventos de dominio
-- Reglas de negocio
-- Interfaces de repositorios
-
-### Capa de Infraestructura (`modulos/{modulo}/infraestructura/`)
-- Implementación de repositorios
-- Persistencia con SQLAlchemy
-- Mapeo ORM
-- Adaptadores externos
-
-## Patrones/Filosofia Implementados
-
-- **Domain-Driven Design (DDD)**: Estructura modular por contextos acotados
-- **Arquitectura Cebolla**: Dependencias hacia el centro (dominio)
-- **Inversión de Dependencias**: Interfaces en dominio, implementaciones en infraestructura
-- **CQS (Command Query Separation)**: Separación clara entre comandos y consultas
-- **Repository Pattern**: Abstracción de persistencia
-- **Factory Pattern**: Creación de objetos complejos
-- **Event-Driven Architecture**: Comunicación mediante eventos de dominio

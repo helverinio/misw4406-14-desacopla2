@@ -1,0 +1,45 @@
+# Default values for shared-ingress
+# This is a YAML-formatted file.
+
+# Ingress configuration
+ingress:
+  enabled: true
+  name: alpespartners-api-ingress
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: "alpespartners-api-ip"
+  
+  # Host configuration (set to empty string for IP-based access)
+  host: ""
+  
+  # TLS configuration (disabled for IP-based access)
+  tls:
+    enabled: false
+    secretName: "alpespartners-api-tls"
+  
+  # Service routing configuration
+  services:
+    - name: "campaigns-service"
+      path: "/campaigns"
+      pathType: "Prefix"
+      port: 80
+    - name: "alliances-service"
+      path: "/alliances"
+      pathType: "Prefix"
+      port: 80
+    - name: "integrations-service"
+      path: "/integrations"
+      pathType: "Prefix"
+      port: 80
+    - name: "compliance-service"
+      path: "/compliance"
+      pathType: "Prefix"
+      port: 80
+
+backendConfig:
+  enabled: true
+
+# Global configuration
+global:
+  namespace: "alpespartners"

@@ -1,7 +1,7 @@
 include:
   - docker-compose.pulsar.yml
 services:
-  db:
+  program-service-db:
     image: postgres:16
     environment:
       POSTGRES_DB: alpespartners
@@ -16,7 +16,9 @@ services:
       retries: 10
     volumes:
       - pgdata:/var/lib/postgresql/data
-  web:
+    networks:
+      - app-network
+  program-service:
     build: 
       context: .
       dockerfile: ./Dockerfile   
@@ -26,12 +28,20 @@ services:
       POSTGRES_DB: alpespartners
       POSTGRES_USER: postgres_user
       POSTGRES_PASSWORD: 1234
-      POSTGRES_HOST: db
+      POSTGRES_HOST: program-service-db
       POSTGRES_PORT: 5432
       BROKER_URL: pulsar://broker:6650
     depends_on:
-      db:
+      program-service-db:
         condition: service_healthy
+    networks:
+      - app-network
 
 volumes:
   pgdata:
+
+networks:
+  app-network:
+    driver: bridge
+  compliance-network:
+    driver: bridge
