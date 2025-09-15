@@ -5,10 +5,17 @@ Aplicación principal para el servicio de Gestión de Integraciones y CRM Partne
 
 from api import crear_app
 from config.db import db
+from config.logging_config import configure_logging
 import threading
+import logging
 
 def main():
     """Función principal para ejecutar la aplicación"""
+    # Configurar logging antes que nada
+    configure_logging(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 Iniciando aplicación de Gestión de Integraciones y CRM Partners")
+    
     # Crear la aplicación Flask
     app = crear_app()
     
@@ -19,16 +26,16 @@ def main():
         
         # Crear todas las tablas
         db.create_all()
-        print("✅ Tablas de base de datos creadas exitosamente")
+        logger.info("✅ Tablas de base de datos creadas exitosamente")
     
     # Inicializar consumidores de eventos en background
     def iniciar_consumidores():
         from modulos.partners.infraestructura.eventos.consumidores import iniciar_consumidor_eventos
         try:
-            print("🎧 Iniciando consumidor de eventos externos...")
+            logger.info("🎧 Iniciando consumidor de eventos externos...")
             iniciar_consumidor_eventos('externos')
         except Exception as e:
-            print(f"❌ Error iniciando consumidor de eventos: {e}")
+            logger.error(f"❌ Error iniciando consumidor de eventos: {e}")
     
     # Ejecutar consumidores en thread separado
     thread_consumidor = threading.Thread(target=iniciar_consumidores, daemon=True)
@@ -38,18 +45,19 @@ def main():
 
 if __name__ == '__main__':
     app = main()
-    print("🚀 Iniciando servicio de Gestión de Integraciones y CRM Partners...")
-    print("📍 Endpoints disponibles:")
-    print("   - POST   /api/v1/partners                    - Crear partner")
-    print("   - GET    /api/v1/partners                    - Listar partners")
-    print("   - GET    /api/v1/partners/{id}              - Obtener partner")
-    print("   - PUT    /api/v1/partners/{id}              - Actualizar partner")
-    print("   - DELETE /api/v1/partners/{id}              - Eliminar partner")
-    print("   - PUT    /api/v1/partners/{id}/kyc          - Verificar KYC")
-    print("   - POST   /api/v1/partners/{id}/integraciones - Crear integración")
-    print("   - PUT    /api/v1/partners/integraciones/{id}/revocar - Revocar integración")
-    print("   - GET    /health                            - Health check")
-    print()
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 Iniciando servicio de Gestión de Integraciones y CRM Partners...")
+    logger.info("📍 Endpoints disponibles:")
+    logger.info("   - POST   /api/v1/partners                    - Crear partner")
+    logger.info("   - GET    /api/v1/partners                    - Listar partners")
+    logger.info("   - GET    /api/v1/partners/{id}              - Obtener partner")
+    logger.info("   - PUT    /api/v1/partners/{id}              - Actualizar partner")
+    logger.info("   - DELETE /api/v1/partners/{id}              - Eliminar partner")
+    logger.info("   - PUT    /api/v1/partners/{id}/kyc          - Verificar KYC")
+    logger.info("   - POST   /api/v1/partners/{id}/integraciones - Crear integración")
+    logger.info("   - PUT    /api/v1/partners/integraciones/{id}/revocar - Revocar integración")
+    logger.info("   - GET    /health                            - Health check")
+    logger.info("")
     
     app.run(
         host='0.0.0.0',

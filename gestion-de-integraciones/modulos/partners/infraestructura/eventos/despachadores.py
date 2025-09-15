@@ -50,7 +50,7 @@ class DespachadorEventosPartner:
         if not is_pulsar_available():
             print(f"⚠️  Pulsar no disponible. Evento {evento.__class__.__name__} no se publicó.")
             print("💡 Para habilitar eventos, inicia Pulsar con: docker-compose -f ../docker-compose.pulsar.yml up -d")
-            return
+            return False  # Return False to indicate event wasn't published
             
         # Determinar el tópico basado en el tipo de evento si no se especifica
         if topico is None:
@@ -67,6 +67,7 @@ class DespachadorEventosPartner:
         try:
             evento_integracion = self.mapper.entidad_a_dto(evento)
             self._publicar_mensaje(evento_integracion, topico, AvroSchema(evento_integracion.__class__))
+            return True  # Return True to indicate successful publication
         except Exception as e:
             print(f"❌ Error mapeando y publicando evento: {e}")
             raise

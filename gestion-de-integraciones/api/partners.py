@@ -27,8 +27,10 @@ servicio_partners = ServicioPartners(repositorio_partners, repositorio_integraci
 @bp.route('', methods=['POST'])
 def crear_partner():
     """Endpoint para crear un nuevo partner"""
+    logger.info("🔄 Iniciando creación de partner")
     try:
         data = request.get_json()
+        logger.debug(f"Datos recibidos: {data}")
         
         # Validar datos requeridos
         if not data or not data.get('nombre') or not data.get('email'):
@@ -46,7 +48,9 @@ def crear_partner():
         )
         
         # Crear partner
+        logger.info(f"Llamando al servicio para crear partner con email: {dto.email}")
         partner_creado = servicio_partners.crear_partner(dto)
+        logger.info(f"✅ Partner creado exitosamente con ID: {partner_creado.id}")
         
         return jsonify({
             'mensaje': 'Partner creado exitosamente',

@@ -81,8 +81,11 @@ class ServicioPartners:
                 self.logger.debug(f"Evento PartnerCreado creado: {evento}")
                 
                 self.logger.debug("Publicando evento PartnerCreado")
-                self.despachador_eventos.publicar_evento(evento)
-                self.logger.info(f"Evento PartnerCreado publicado exitosamente para partner ID: {partner_guardado.id}")
+                evento_publicado = self.despachador_eventos.publicar_evento(evento)
+                if evento_publicado:
+                    self.logger.info(f"Evento PartnerCreado publicado exitosamente para partner ID: {partner_guardado.id}")
+                else:
+                    self.logger.warning(f"Evento PartnerCreado no se pudo publicar para partner ID: {partner_guardado.id} - Pulsar no disponible")
                 
             except Exception as e:
                 self.logger.error(f"Error al crear o publicar evento PartnerCreado: {str(e)}", exc_info=True)
@@ -135,7 +138,9 @@ class ServicioPartners:
             estado=partner_actualizado.estado,
             estado_anterior=estado_anterior
         )
-        self.despachador_eventos.publicar_evento(evento)
+        evento_publicado = self.despachador_eventos.publicar_evento(evento)
+        if not evento_publicado:
+            self.logger.warning(f"Evento PartnerActualizado no se pudo publicar para partner ID: {partner_actualizado.id} - Pulsar no disponible")
         
         return self.mapeador_partner.entidad_a_dto(partner_actualizado)
     
@@ -161,7 +166,9 @@ class ServicioPartners:
             email=partner.email,
             fecha_eliminacion=datetime.utcnow()
         )
-        self.despachador_eventos.publicar_evento(evento)
+        evento_publicado = self.despachador_eventos.publicar_evento(evento)
+        if not evento_publicado:
+            self.logger.warning(f"Evento PartnerEliminado no se pudo publicar para partner ID: {partner.id} - Pulsar no disponible")
         
         return True
     
@@ -196,7 +203,9 @@ class ServicioPartners:
             documentos=dto.documentos,
             observaciones=getattr(dto, 'observaciones', None)
         )
-        self.despachador_eventos.publicar_evento(evento)
+        evento_publicado = self.despachador_eventos.publicar_evento(evento)
+        if not evento_publicado:
+            self.logger.warning(f"Evento KYCVerificado no se pudo publicar para partner ID: {partner_actualizado.id} - Pulsar no disponible")
         
         return self.mapeador_partner.entidad_a_dto(partner_actualizado)
     
@@ -223,7 +232,9 @@ class ServicioPartners:
             fecha_revocacion=datetime.utcnow(),
             motivo=getattr(dto, 'motivo', None)
         )
-        self.despachador_eventos.publicar_evento(evento)
+        evento_publicado = self.despachador_eventos.publicar_evento(evento)
+        if not evento_publicado:
+            self.logger.warning(f"Evento IntegracionRevocada no se pudo publicar para integración ID: {integracion.id} - Pulsar no disponible")
         
         return True
     
@@ -279,6 +290,8 @@ class ServicioPartners:
             descripcion=integracion_guardada.descripcion,
             configuracion=integracion_guardada.configuracion
         )
-        self.despachador_eventos.publicar_evento(evento)
+        evento_publicado = self.despachador_eventos.publicar_evento(evento)
+        if not evento_publicado:
+            self.logger.warning(f"Evento IntegracionCreada no se pudo publicar para integración ID: {integracion_guardada.id} - Pulsar no disponible")
         
         return self.mapeador_integracion.entidad_a_dto(integracion_guardada)
