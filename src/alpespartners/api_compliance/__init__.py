@@ -8,8 +8,17 @@ from flask import Flask, jsonify
 from flask_swagger import swagger
 from sqlalchemy import text
 
+from alpespartners.api_programa import comenzar_consumidor
+
 def importar_modelos_alchemy():
     import alpespartners.modulos.compliance.infraestructura.dto
+
+def comenzar_consumidor():
+    import threading
+    import alpespartners.modulos.compliance.infraestructura.consumidores as compliance
+
+    # Suscripción a eventos
+    threading.Thread(target=compliance.suscribirse_a_eventos).start()
 
 def create_app(configuracion={}):
     import logging
@@ -37,7 +46,7 @@ def create_app(configuracion={}):
         
         with app.app_context():
             db.create_all()
-            #comenzar_consumidor()
+            comenzar_consumidor()
 
         logger.info("Base de datos de compliance inicializada correctamente.")
     except Exception as e:
