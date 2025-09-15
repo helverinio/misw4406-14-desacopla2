@@ -19,12 +19,6 @@ class EventoPartner(EventoDominio):
 class PartnerCreado(EventoPartner):
     """Evento disparado cuando se crea un nuevo partner"""
     partner_id: str
-    nombre: str
-    email: str
-    telefono: Optional[str]
-    direccion: Optional[str]
-    estado: EstadoPartner
-    estado_kyc: EstadoKYC
     
     def __post_init__(self):
         super().__init__()

@@ -16,6 +16,7 @@ from .schema.v1.eventos import (
     EventoIntegracionCreada as EventoIntegracionCreadaIntegracion,
     EventoIntegracionRevocada as EventoIntegracionRevocadaIntegracion,
     PartnerPayload,
+    PartnerCreadoPayload,
     PartnerActualizadoPayload,
     KYCPayload,
     IntegracionPayload,
@@ -49,14 +50,8 @@ class MapeadorEventoDominioPartner:
 
     def _entidad_a_partner_creado(self, evento: PartnerCreado, version=LATEST_VERSION) -> EventoPartnerCreadoIntegracion:
         def v1(evento: PartnerCreado):
-            payload = PartnerPayload(
-                partner_id=evento.partner_id,
-                nombre=evento.nombre,
-                email=evento.email,
-                telefono=evento.telefono or "",
-                direccion=evento.direccion or "",
-                estado=evento.estado.value,
-                estado_kyc=evento.estado_kyc.value
+            payload = PartnerCreadoPayload(
+                partner_id=evento.partner_id
             )
             
             evento_integracion = EventoPartnerCreadoIntegracion(

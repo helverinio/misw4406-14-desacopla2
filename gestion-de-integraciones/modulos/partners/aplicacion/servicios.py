@@ -70,13 +70,7 @@ class ServicioPartners:
             self.logger.debug("Preparando evento PartnerCreado")
             try:
                 evento = PartnerCreado(
-                    partner_id=partner_guardado.id,
-                    nombre=partner_guardado.nombre,
-                    email=partner_guardado.email,
-                    telefono=partner_guardado.telefono,
-                    direccion=partner_guardado.direccion,
-                    estado=partner_guardado.estado,
-                    estado_kyc=partner_guardado.estado_kyc
+                    partner_id=partner_guardado.id
                 )
                 self.logger.debug(f"Evento PartnerCreado creado: {evento}")
                 

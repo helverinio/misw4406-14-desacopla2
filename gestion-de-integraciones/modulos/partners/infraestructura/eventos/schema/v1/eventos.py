@@ -27,6 +27,10 @@ class PartnerPayload(Record):
     estado = String()
     estado_kyc = String()
 
+class PartnerCreadoPayload(Record):
+    """Payload simplificado para eventos de Partner creado"""
+    partner_id = String()
+
 class PartnerActualizadoPayload(Record):
     """Payload para eventos de Partner actualizado"""
     partner_id = String()
@@ -61,7 +65,7 @@ class IntegracionRevocadaPayload(Record):
 
 # Eventos de integración específicos
 class EventoPartnerCreado(EventoIntegracion):
-    data = PartnerPayload()
+    data = PartnerCreadoPayload()
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
