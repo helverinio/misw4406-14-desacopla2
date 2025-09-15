@@ -27,12 +27,12 @@ postgres_instances = {
     database_password = "pA*Eo6@4@kuP3f"
     instance_name = "campaigns-postgres"
   }
-#   analytics_instance = {
-#     database_name = "analytics_database"
-#     database_user = "analytics_user"
-#     database_password = "An@lyt1cs#2024!"
-#     instance_name = "analytics-postgres"
-#   }
+  integrations_instance = {
+    database_name = "integrations_database"
+    database_user = "integrations_user"
+    database_password = "integrations_password"
+    instance_name = "integrations-postgres"
+  }
 #   reporting_instance = {
 #     database_name = "reporting_database"
 #     database_user = "reporting_user"
@@ -53,6 +53,11 @@ artifact_registry_repositories = {
   campaigns_service = {
     repository_id = "campaigns-service"
     description   = "Docker repository for campaigns-service application"
+    keep_count    = 5
+  }
+  integrations_service = {
+    repository_id = "integrations-service"
+    description   = "Docker repository for integrations-service application"
     keep_count    = 5
   }
 #   analytics_service = {

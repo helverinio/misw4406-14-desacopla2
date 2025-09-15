@@ -9,9 +9,9 @@ services:
       - SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@postgres:5432/partners_db
     depends_on:
       - postgres
-    volumes:
-      - .:/app
-    working_dir: /app
+    # volumes:
+    #   - .:/app
+    # working_dir: /app
 
   postgres:
     image: postgres:15

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "integrations-service.fullname" . }}-config
+  labels:
+    {{- include "integrations-service.labels" . | nindent 4 }}
+data:
+  SQLALCHEMY_DATABASE_URI: "postgresql://{{ .Values.database.user }}:{{ .Values.secrets.postgresPassword | b64dec }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode={{ .Values.database.sslMode }}"
+  BROKER_URL: {{ .Values.broker.url | quote }}

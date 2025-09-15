@@ -88,6 +88,3 @@ docker-compose*.yml
 
 # Logs
 *.log
-
-# UV lock file (already copied via pyproject.toml)
-uv.lock
