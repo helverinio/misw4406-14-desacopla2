@@ -53,9 +53,9 @@ def create_app():
     app.pulsar_client = pulsar_client
     app.event_listener_service = event_listener_service
     
-    @app.before_first_request
-    def startup():
-        """Initialize services on first request"""
+    # Initialize services at startup
+    def initialize_services():
+        """Initialize services at startup"""
         try:
             logger.info("Starting Saga Orchestrator services...")
             
@@ -70,6 +70,9 @@ def create_app():
         except Exception as e:
             logger.error(f"Failed to start Saga Orchestrator: {e}")
             raise
+    
+    # Store initialization function for later use
+    app.initialize_services = initialize_services
     
     @app.teardown_appcontext
     def cleanup(error):
@@ -92,6 +95,9 @@ def main():
     """Main entry point"""
     try:
         app = create_app()
+        
+        # Initialize services
+        app.initialize_services()
         
         # Get configuration
         host = os.getenv('HOST', '0.0.0.0')

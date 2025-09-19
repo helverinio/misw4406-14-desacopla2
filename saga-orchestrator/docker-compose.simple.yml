@@ -1,0 +1,81 @@
+# Simple Docker Compose - just saga orchestrator with infrastructure
+services:
+  # PostgreSQL database for saga state persistence
+  postgres:
+    image: postgres:15-alpine
+    container_name: saga-postgres-simple
+    environment:
+      POSTGRES_DB: saga_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_simple_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saga-simple-network
+
+  # Apache Pulsar for event messaging
+  pulsar:
+    image: apachepulsar/pulsar:3.1.0
+    container_name: saga-pulsar-simple
+    command: bin/pulsar standalone
+    ports:
+      - "6650:6650"  # Pulsar broker
+      - "8080:8080"  # Pulsar admin
+    environment:
+      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
+    volumes:
+      - pulsar_simple_data:/pulsar/data
+    healthcheck:
+      test: ["CMD", "bin/pulsar-admin", "brokers", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - saga-simple-network
+
+  # Saga Orchestrator Service
+  saga-orchestrator:
+    build: .
+    container_name: saga-orchestrator-simple
+    ports:
+      - "5003:5003"
+    environment:
+      - BROKER_URL=pulsar://pulsar:6650
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/saga_db
+      - INTEGRACIONES_API_URL=http://host.docker.internal:5001
+      - ALIANZAS_API_URL=http://host.docker.internal:5002
+      - HOST=0.0.0.0
+      - PORT=5003
+      - DEBUG=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - saga-simple-network
+    restart: unless-stopped
+
+volumes:
+  postgres_simple_data:
+    driver: local
+  pulsar_simple_data:
+    driver: local
+
+networks:
+  saga-simple-network:
+    driver: bridge
