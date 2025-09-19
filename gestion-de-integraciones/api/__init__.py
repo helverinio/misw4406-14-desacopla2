@@ -19,7 +19,9 @@ def crear_app(configuracion={}):
     
     # Registrar blueprints
     from api.partners import bp as partners_bp
+    from api.saga_partners import bp as saga_partners_bp
     app.register_blueprint(partners_bp)
+    app.register_blueprint(saga_partners_bp)
     
     @app.route('/health')
     def health_check():

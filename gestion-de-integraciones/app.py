@@ -59,6 +59,8 @@ if __name__ == '__main__':
     logger.info("   - PUT    /api/v1/partners/{id}/kyc          - Verificar KYC")
     logger.info("   - POST   /api/v1/partners/{id}/integraciones - Crear integración")
     logger.info("   - PUT    /api/v1/partners/integraciones/{id}/revocar - Revocar integración")
+    logger.info("   - POST   /api/v1/saga/partners              - Crear partner con Saga")
+    logger.info("   - GET    /api/v1/saga/partners/saga-status/{id} - Estado de saga")
     logger.info("   - GET    /health                            - Health check")
     logger.info("")
     
