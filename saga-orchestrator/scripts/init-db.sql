@@ -4,8 +4,9 @@
 -- CREATE DATABASE saga_db;
 
 -- Create additional databases for other services if needed
-CREATE DATABASE IF NOT EXISTS partners_db;
-CREATE DATABASE IF NOT EXISTS alianzas_db;
+-- Note: These will fail silently if databases already exist
+CREATE DATABASE partners_db;
+CREATE DATABASE alianzas_db;
 
 -- Create saga user with appropriate permissions
 DO $$

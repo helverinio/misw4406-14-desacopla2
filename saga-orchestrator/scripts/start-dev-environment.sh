@@ -55,7 +55,7 @@ echo "=" * 50
 echo "📊 Service URLs:"
 echo "   PostgreSQL: localhost:5432"
 echo "   Pulsar Broker: pulsar://localhost:6650"
-echo "   Pulsar Admin: http://localhost:8080"
+echo "   Pulsar Admin: http://localhost:8081"
 echo "   Pulsar Manager: http://localhost:9527"
 echo ""
 echo "🔧 Environment Variables for local development:"

@@ -115,7 +115,7 @@ make status
 
 # Test specific service
 curl http://localhost:5003/health
-curl http://localhost:8080/admin/v2/brokers/health
+curl http://localhost:8081/admin/v2/brokers/health
 ```
 
 ### View Logs
