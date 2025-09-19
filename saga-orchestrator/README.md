@@ -41,7 +41,25 @@ uv run python app.py
 make dev-down
 ```
 
-### Option 2: Full Docker Compose (All Services)
+### Option 2: Using Shared Pulsar Broker (Recommended for Integration)
+
+```bash
+# Start shared Pulsar broker first (from root directory)
+cd .. && docker-compose -f docker-compose.pulsar.yml up -d
+
+# Start saga orchestrator with shared broker
+make shared-up
+# or
+docker-compose -f docker-compose.shared-pulsar.yml up -d
+
+# Stop saga orchestrator
+make shared-down
+
+# Stop shared Pulsar (from root directory)
+cd .. && docker-compose -f docker-compose.pulsar.yml down
+```
+
+### Option 3: Full Docker Compose (All Services)
 
 ```bash
 # Start all services including orchestrator
@@ -53,7 +71,7 @@ docker-compose up -d
 make full-down
 ```
 
-### Option 3: Manual Setup
+### Option 4: Manual Setup
 
 ```bash
 # Install dependencies
@@ -99,6 +117,10 @@ make dev-up          # Start infrastructure
 make run             # Run orchestrator locally
 make monitor         # Monitor events (in another terminal)
 make dev-down        # Stop when done
+
+# Shared Pulsar integration (recommended for multi-service setup)
+make shared-up       # Start with shared Pulsar broker
+make shared-down     # Stop saga orchestrator only
 
 # Full Docker deployment
 make simple-up       # Start orchestrator + infrastructure

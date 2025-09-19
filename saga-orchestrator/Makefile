@@ -11,6 +11,8 @@ help:
 	@echo "  dev-down    - Stop development environment"
 	@echo "  simple-up   - Start simple environment (orchestrator + infrastructure)"
 	@echo "  simple-down - Stop simple environment"
+	@echo "  shared-up   - Start with shared Pulsar broker (from root directory)"
+	@echo "  shared-down - Stop shared Pulsar environment"
 	@echo "  full-up     - Start full environment (all services)"
 	@echo "  full-down   - Stop full environment"
 	@echo "  run         - Run saga orchestrator locally"
@@ -46,6 +48,18 @@ simple-up:
 simple-down:
 	@echo "🛑 Stopping simple environment..."
 	docker-compose -f docker-compose.simple.yml down
+
+# Start with shared Pulsar broker
+shared-up:
+	@echo "🚀 Starting saga orchestrator with shared Pulsar..."
+	@echo "⚠️  Make sure shared Pulsar is running first:"
+	@echo "   cd .. && docker-compose -f docker-compose.pulsar.yml up -d"
+	docker-compose -f docker-compose.shared-pulsar.yml up -d
+
+# Stop shared environment
+shared-down:
+	@echo "🛑 Stopping shared environment..."
+	docker-compose -f docker-compose.shared-pulsar.yml down
 
 # Start full environment (all services)
 full-up:

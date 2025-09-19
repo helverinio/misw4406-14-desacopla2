@@ -1,0 +1,68 @@
+# Docker Compose for Saga Orchestrator using shared Pulsar broker
+# This assumes the shared Pulsar broker is running from the root directory
+# Run: docker-compose -f docker-compose.pulsar.yml up -d (from root directory first)
+
+services:
+  # PostgreSQL database for saga state persistence
+  postgres:
+    image: postgres:15-alpine
+    container_name: saga-postgres-shared
+    environment:
+      POSTGRES_DB: saga_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Changed port to avoid conflicts
+    volumes:
+      - postgres_shared_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saga-shared-network
+      - default  # Connect to default network to reach shared Pulsar
+
+  # Saga Orchestrator Service (connects to shared Pulsar)
+  saga-orchestrator:
+    build: .
+    container_name: saga-orchestrator-shared
+    ports:
+      - "5003:5003"
+    environment:
+      - BROKER_URL=pulsar://broker:6650  # Use shared broker
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/saga_db
+      - INTEGRACIONES_API_URL=http://host.docker.internal:5001
+      - ALIANZAS_API_URL=http://host.docker.internal:5002
+      - HOST=0.0.0.0
+      - PORT=5003
+      - DEBUG=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - saga-shared-network
+      - default  # Connect to default network to reach shared Pulsar
+    restart: unless-stopped
+    external_links:
+      - broker:broker  # Link to shared Pulsar broker
+
+volumes:
+  postgres_shared_data:
+    driver: local
+
+networks:
+  saga-shared-network:
+    driver: bridge
+  # Use default network to connect to shared Pulsar services
+  default:
+    external: true
+    name: misw4406-14-desacopla2_default
