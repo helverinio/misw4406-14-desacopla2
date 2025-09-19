@@ -1,0 +1,29 @@
+[project]
+name = "saga-orchestrator"
+version = "0.1.0"
+description = "Central Saga Orchestrator for partner creation workflow"
+authors = [
+    {name = "AlpesPartners", email = "dev@alpespartners.com"},
+]
+dependencies = [
+    "pulsar-client[avro]>=3.4.0",
+    "flask>=3.0.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

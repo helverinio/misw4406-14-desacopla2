@@ -1,0 +1,87 @@
+replicaCount: 1
+
+image:
+  repository: gcr.io/your-project-id/saga-orchestrator
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5003
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: saga-orchestrator.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  - name: BROKER_URL
+    value: "pulsar://pulsar-proxy:6650"
+  - name: DATABASE_URL
+    value: "postgresql://postgres:postgres@postgres:5432/saga_db"
+  - name: INTEGRACIONES_API_URL
+    value: "http://gestion-de-integraciones-service:80"
+  - name: ALIANZAS_API_URL
+    value: "http://gestion-de-alianzas-service:80"
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "5003"
+  - name: DEBUG
+    value: "false"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 5003
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 5003
+  initialDelaySeconds: 5
+  periodSeconds: 5

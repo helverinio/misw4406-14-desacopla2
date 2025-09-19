@@ -44,8 +44,11 @@ class PulsarContratoConsumer:
             try:
                 data = json.loads(msg.data().decode('utf-8'))
                 print(f'\n\n\nReceived message: {data}\n\n\n')
-                # contrato = Contrato(**data)
-
+                
+                # Extract saga information if present
+                saga_id = data.get("saga_id")
+                correlation_id = data.get("correlation_id")
+                command = data.get("command")
                 
                 tipos = list(TipoContrato)
                 estados = list(EstadoContrato)
@@ -54,6 +57,7 @@ class PulsarContratoConsumer:
                 partner_id = data.get("partner_id")
                 if not partner_id:
                     partner_id = str(uuid.uuid4())
+                
                 contrato = Contrato(
                     partner_id=partner_id,
                     tipo=random.choice(tipos),
@@ -66,15 +70,27 @@ class PulsarContratoConsumer:
                     fecha_creacion=datetime.utcnow(),
                     fecha_actualizacion=None
                 )
+                
                 # Use persistent event loop for async DB operation
                 result = loop.run_until_complete(self.use_case.execute(contrato))
                 print(f'\n\n\nContrato created: {result}\n\n\n')
 
+                # Prepare compliance event with saga information
+                contrato_dict = contrato.model_dump() if hasattr(contrato, 'model_dump') else contrato.dict()
+                compliance_data = {
+                    **contrato_dict,
+                    'contrato_id': result.id if hasattr(result, 'id') else str(uuid.uuid4()),
+                    'alliance_id': result.id if hasattr(result, 'id') else str(uuid.uuid4()),
+                    'saga_id': saga_id,
+                    'correlation_id': correlation_id,
+                    'event_type': 'alliance_created'
+                }
+
                 # Publish to administracion-financiera-compliance topic
                 compliance_producer = self.client.create_producer('administracion-financiera-compliance')
-                contrato_json = contrato.model_dump_json() if hasattr(contrato, 'model_dump_json') else json.dumps(contrato.dict(), default=str)
-                compliance_producer.send(contrato_json.encode('utf-8'))
-                print(f'\n\n\nContrato published to administracion-financiera-compliance: {contrato_json}\n\n\n')
+                compliance_json = json.dumps(compliance_data, default=str)
+                compliance_producer.send(compliance_json.encode('utf-8'))
+                print(f'\n\n\nContrato published to administracion-financiera-compliance: {compliance_json}\n\n\n')
 
                 self.consumer.acknowledge(msg)
             except Exception as e:
