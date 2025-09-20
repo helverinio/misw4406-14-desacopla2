@@ -2,8 +2,8 @@ import logging
 import traceback
 import json
 from alpespartners.modulos.compliance.infraestructura.schema.v1.eventos import EventoContratoCreado
-from alpespartners.seedwork.dominio.servicios import ComplianceService
-from alpespartners.modulos.compliance.aplicacion.servicios import ComplianceApplicationService
+from alpespartners.modulos.compliance.aplicacion.comandos.procesar_compliance import ProcesarComplianceContrato
+from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
 import pulsar, _pulsar
 from pulsar.schema import *
 from alpespartners.seedwork.infrastructura.utils import broker_url
@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Consumidor de eventos de Pulsar
 class PulsarComplianceConsumer:
-    def __init__(self, compliance_service: ComplianceService):
-        self.compliance_service = compliance_service
+    def __init__(self):
         self.cliente = None
     
     def iniciar_consumo(self):
@@ -46,8 +45,11 @@ class PulsarComplianceConsumer:
                     contrato_data = json.loads(content)
                     logger.info(f"📋 Contrato parseado: {contrato_data}")
                     
-                    # Delegar al servicio de dominio
-                    self.compliance_service.procesar_contrato(contrato_data)
+                    # Crear comando de compliance
+                    comando_compliance = self._crear_comando_compliance(contrato_data)
+                    
+                    # Ejecutar comando usando CQRS
+                    comando(comando_compliance)
                     
                     consumidor.acknowledge(mensaje)
                     logger.info("✅ Mensaje procesado exitosamente")
@@ -66,14 +68,21 @@ class PulsarComplianceConsumer:
             if self.cliente:
                 self.cliente.close()
 
+    def _crear_comando_compliance(self, contrato_data: dict) -> ProcesarComplianceContrato:
+        return ProcesarComplianceContrato(
+            partner_id=contrato_data.get('partner_id'),
+            contrato_id=contrato_data.get('id', 'unknown'),
+            monto=contrato_data.get('monto', 0),
+            moneda=contrato_data.get('moneda', 'USD'),
+            estado=contrato_data.get('estado', 'PENDIENTE'),
+            tipo=contrato_data.get('tipo'),
+            fecha_inicio=contrato_data.get('fecha_inicio'),
+            fecha_fin=contrato_data.get('fecha_fin')
+        )
+
 
 def suscribirse_a_eventos():
-    """
-    Función de fábrica que ensambla las dependencias e inicia el consumidor
-    """
-    # Inyección de dependencias - crear instancias concretas
-    compliance_service = ComplianceApplicationService()
-    consumer = PulsarComplianceConsumer(compliance_service)
+    consumer = PulsarComplianceConsumer()
     
     # Iniciar consumo
     consumer.iniciar_consumo()

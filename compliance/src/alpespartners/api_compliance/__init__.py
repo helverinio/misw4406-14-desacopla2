@@ -11,12 +11,16 @@ from sqlalchemy import text
 def importar_modelos_alchemy():
     import alpespartners.modulos.compliance.infraestructura.dto
 
-def comenzar_consumidor():
+def comenzar_consumidor(app):
     import threading
     import alpespartners.modulos.compliance.infraestructura.consumidores as compliance
 
-    # Suscripción a eventos
-    threading.Thread(target=compliance.suscribirse_a_eventos).start()
+    # Suscripción a eventos con contexto de aplicación
+    def consumidor_con_contexto():
+        with app.app_context():
+            compliance.suscribirse_a_eventos()
+    
+    threading.Thread(target=consumidor_con_contexto).start()
 
 def create_app(configuracion={}):
     import logging
@@ -44,7 +48,7 @@ def create_app(configuracion={}):
         
         with app.app_context():
             db.create_all()
-            comenzar_consumidor()
+            comenzar_consumidor(app)
 
         logger.info("Base de datos de compliance inicializada correctamente.")
     except Exception as e:
