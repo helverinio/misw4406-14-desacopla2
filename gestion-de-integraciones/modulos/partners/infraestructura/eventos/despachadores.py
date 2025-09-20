@@ -55,7 +55,7 @@ class DespachadorEventosPartner:
         # Determinar el tópico basado en el tipo de evento si no se especifica
         if topico is None:
             topico_map = {
-                'PartnerCreado': 'eventos-partners-creado',
+                'PartnerCreado': 'gestion-de-integraciones',
                 'PartnerActualizado': 'eventos-partners-actualizado',
                 'PartnerEliminado': 'eventos-partners-eliminado',
                 'KYCVerificado': 'eventos-kyc-verificado',
