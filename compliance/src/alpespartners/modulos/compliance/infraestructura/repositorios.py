@@ -1,5 +1,5 @@
 
-from alpespartners.modulos.compliance.dominio.repositorios import RepositorioCompliance
+from alpespartners.seedwork.dominio.repositorio import Repositorio
 from alpespartners.modulos.compliance.dominio.fabricas  import FabricaCompliance
 from alpespartners.modulos.compliance.dominio.entidades import Payment
 from alpespartners.config.db import db
@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class RepositorioPaymentPostgress(RepositorioCompliance):
+class RepositorioPaymentPostgress(Repositorio):
     def __init__(self):
         self._fabrica_compliance: FabricaCompliance = FabricaCompliance()
     

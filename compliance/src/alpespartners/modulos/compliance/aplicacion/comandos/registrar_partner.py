@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from alpespartners.modulos.compliance.aplicacion.dto import PaymentDTO
 from alpespartners.modulos.compliance.aplicacion.mapeadores import MapeadorPayment
-from alpespartners.modulos.compliance.dominio.repositorios import RepositorioCompliance
+from alpespartners.modulos.compliance.infraestructura.repositorios import RepositorioPaymentPostgress
 from .base import ComandoBaseHandler
 from alpespartners.seedwork.aplicacion.comandos import Comando
 from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
@@ -33,9 +33,8 @@ class RegistrarPartnerHandler(ComandoBaseHandler):
             payment_DTO, MapeadorPayment()
         )
 
-        repositorio = self._fabrica_repositorio.crear_objeto(RepositorioCompliance.__class__)
+        repositorio = self._fabrica_repositorio.crear_objeto(RepositorioPaymentPostgress.__class__)
         repositorio.agregar(payment)
-        payment.registrar_partner(payment)
     
 @comando.register(RegistrarPartner)
 def ejecutar_comando_registrar_partner(
