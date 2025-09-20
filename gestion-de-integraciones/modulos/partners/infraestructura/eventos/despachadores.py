@@ -65,6 +65,7 @@ class DespachadorEventosPartner:
             topico = topico_map.get(evento.__class__.__name__, 'eventos-partners-general')
             
         try:
+            print(f"🌐 Publicando evento '{evento.__class__.__name__}' en tópico '{topico}'")
             evento_integracion = self.mapper.entidad_a_dto(evento)
             self._publicar_mensaje(evento_integracion, topico, AvroSchema(evento_integracion.__class__))
             return True  # Return True to indicate successful publication
