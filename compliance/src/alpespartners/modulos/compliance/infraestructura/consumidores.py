@@ -26,14 +26,14 @@ class PulsarComplianceConsumer:
             
             # Usar BytesSchema para compatibilidad con JSON
             consumidor = self.cliente.subscribe(
-                "administracion-financiera-compliance",
+                "ContratoCreado",
                 consumer_type=_pulsar.ConsumerType.Shared,
-                subscription_name="administracion-financiera-compliance",
+                subscription_name="ContratoCreado-subscription",
                 schema=BytesSchema()  # Compatible con JSON de gestion-de-alianzas
             )
-            
-            logger.info("🎧 Suscrito a eventos de administracion-financiera-compliance")
-            
+
+            logger.info("🎧 Suscrito a eventos de ContratoCreado")
+
             while True:
                 mensaje = consumidor.receive()
                 try:

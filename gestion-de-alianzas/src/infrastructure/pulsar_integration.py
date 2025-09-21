@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 PULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
 TOPIC = 'gestion-de-integraciones'
+TOPIC_PARTNERCREADO = 'PartnerCreado'
 
 # Publisher
 class PulsarContratoPublisher:
@@ -47,7 +48,7 @@ class PulsarContratoConsumer:
         try:
             logger.info(f"🔌 Connecting Pulsar consumer to {PULSAR_SERVICE_URL}")
             self.client = pulsar.Client(PULSAR_SERVICE_URL)
-            self.consumer = self.client.subscribe(TOPIC, subscription_name='contrato-sub')
+            self.consumer = self.client.subscribe(TOPIC_PARTNERCREADO, subscription_name='contrato-sub')
             self.use_case = build_create_contrato_use_case()
             logger.info(f"✅ Pulsar consumer initialized successfully")
         except Exception as e:
@@ -58,8 +59,8 @@ class PulsarContratoConsumer:
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            logger.info(f"📡 Subscribed to topic: {TOPIC}")
-            
+            logger.info(f"📡 Subscribed to topic: {TOPIC_PARTNERCREADO}")
+
             while True:
                 logger.info("⏳ Waiting for messages...")
                 msg = self.consumer.receive()
@@ -101,7 +102,7 @@ class PulsarContratoConsumer:
                         monto=round(random.uniform(100, 10000), 2),
                         moneda=random.choice(monedas),
                         condiciones=random.choice(condiciones_list),
-                        estado=random.choice(estados),
+                        estado=EstadoContrato.ACTIVO,
                         fecha_creacion=datetime.utcnow(),
                         fecha_actualizacion=None
                     )
@@ -109,11 +110,11 @@ class PulsarContratoConsumer:
                     result = loop.run_until_complete(self.use_case.execute(contrato))
                     logger.info(f'✅ Contrato created: {result}')
 
-                    # Publish to administracion-financiera-compliance topic
-                    compliance_producer = self.client.create_producer('administracion-financiera-compliance')
+                    # Publish to ContratoCreado topic
+                    compliance_producer = self.client.create_producer('ContratoCreado')
                     contrato_json = contrato.model_dump_json() if hasattr(contrato, 'model_dump_json') else json.dumps(contrato.dict(), default=str)
                     compliance_producer.send(contrato_json.encode('utf-8'))
-                    logger.info(f'📤 Contrato published to administracion-financiera-compliance: {contrato_json}')
+                    logger.info(f'📤 Contrato published to ContratoCreado: {contrato_json}')
 
                     self.consumer.acknowledge(msg)
                 except Exception as e:
