@@ -10,7 +10,7 @@ RELEASE_NAME=${1:-pulsar}
 NAMESPACE=${2:-pulsar}
 CHART_REPO="https://pulsar.apache.org/charts"
 CHART_NAME="pulsar"
-VALUES_FILE="terraform/charts/pulsar/values.yaml"
+VALUES_FILE="helm/pulsar/values.yaml"
 
 echo "🚀 Deploying Apache Pulsar with Helm..."
 echo "Release: ${RELEASE_NAME}"

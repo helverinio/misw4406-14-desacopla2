@@ -7,8 +7,8 @@ set -e
 
 RELEASE_NAME=${1:-shared-ingress}
 NAMESPACE=${2:-alpespartners}
-CHART_PATH="terraform/charts/shared-ingress"
-VALUES_FILE="terraform/charts/shared-ingress/values.yaml"
+CHART_PATH="helm/shared-ingress"
+VALUES_FILE="helm/shared-ingress/values.yaml"
 
 echo "🚀 Deploying shared ingress for AlpesPartners services with Helm..."
 echo "Release: ${RELEASE_NAME}"

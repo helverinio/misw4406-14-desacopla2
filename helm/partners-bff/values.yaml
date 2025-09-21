@@ -1,10 +1,10 @@
-# Default values for alliances-service
+# Default values for partners-bff
 # This is a YAML-formatted file.
 
 replicaCount: 2
 
 image:
-  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/alliances-service/alliances-service
+  repository: us-east1-docker.pkg.dev/misw4406-2025-14-desacopla2/partners-bff/partners-bff
   pullPolicy: Always
   tag: "latest"
 
@@ -44,16 +44,16 @@ ingress:
   className: "gce"
   annotations:
     kubernetes.io/ingress.class: gce
-    kubernetes.io/ingress.global-static-ip-name: "alliances-api-ip"
+    kubernetes.io/ingress.global-static-ip-name: "partners-bff-api-ip"
   hosts:
     - host: ""
       paths:
         - path: /
           pathType: Prefix
   tls: []
-  #  - secretName: alliances-service-tls
+  #  - secretName: partners-bff-tls
   #    hosts:
-  #      - alliances-service.local
+  #      - partners-bff.local
 
 resources:
   limits:
@@ -76,29 +76,19 @@ tolerations: []
 
 affinity: {}
 
-# Database configuration
-database:
-  host: "10.179.0.7"
-  port: 5432
-  name: "alliances_database"
-  user: "alliances_user"
-
 # Broker configuration
 broker:
   url: "pulsar://pulsar-broker.pulsar.svc.cluster.local:6650"
 
 # Secrets configuration
-secrets:
-  postgresPassword: "YWxsaWFuY2VzX3Bhc3N3b3Jk"
+secrets: {}
 
 # Environment variables
 env:
   - name: APP_NAME
-    value: "Gestion de alianzas app"
+    value: "Partners BFF app"
   - name: LOG_LEVEL
     value: "INFO"
-  - name: API_PREFIX
-    value: "/alliances"
 
 # Health check configuration
 healthCheck:

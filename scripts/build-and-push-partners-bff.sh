@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Build and push Docker image for campaigns-service
-# Usage: ./scripts/build-and-push.sh [tag]
+# Build and push Docker image for partners-bff
+# Usage: ./scripts/build-and-push-partners-bff.sh [tag]
 
 set -e
 
 # Configuration
 PROJECT_ID="misw4406-2025-14-desacopla2"
 REGION="us-east1"
-REPOSITORY="campaigns-service"
-IMAGE_NAME="campaigns-service"
+REPOSITORY="partners-bff"
+IMAGE_NAME="partners-bff"
 
 # Get tag from argument or use 'latest'
 TAG=${1:-latest}
@@ -21,7 +21,7 @@ echo "🚀 Building and pushing Docker image..."
 echo "Image: ${FULL_IMAGE_NAME}"
 
 # Navigate to project root
-cd "$(dirname "$0")/../gestion-de-programas"
+cd "$(dirname "$0")/.."
 
 # Configure Docker to use gcloud as a credential helper
 echo "📋 Configuring Docker authentication..."
@@ -32,7 +32,9 @@ echo "🔨 Building and pushing Docker image for multiple platforms (amd64, arm6
 docker buildx build \
     --platform linux/amd64,linux/arm64 \
     --tag ${FULL_IMAGE_NAME} \
-    --push .
+    --push \
+    --file partners-bff/Dockerfile \
+    partners-bff/
 
 echo "✅ Successfully built and pushed: ${FULL_IMAGE_NAME}"
-echo "🎯 You can now deploy with: ./scripts/deploy-helm.sh"
+echo "🎯 You can now deploy with: ./scripts/deploy-partners-bff.sh"

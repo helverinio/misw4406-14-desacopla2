@@ -37,7 +37,7 @@ if [ $# -eq 0 ]; then
 fi
 
 SERVICE_NAME=$1
-CHART_PATH="../terraform/charts/$SERVICE_NAME"
+CHART_PATH="../helm/$SERVICE_NAME"
 
 # Validate service name
 case $SERVICE_NAME in
