@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
 from seedwork.aplicacion.handlers import Handler
-from modulos.sagas.dominio.eventos.partners import CreatePartner, PartnerCreated, PartnerCreationFailed
+from modulos.sagas.dominio.eventos import CreatePartner, PartnerCreated, PartnerCreationFailed
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ import threading
 # Agregar paths para imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
-from modulos.sagas.dominio.eventos.partners import (
+from modulos.sagas.dominio.eventos import (
     CreatePartner, PartnerCreated, PartnerCreationFailed,
     ContratoCreado, ContratoCreadoFailed
 )
