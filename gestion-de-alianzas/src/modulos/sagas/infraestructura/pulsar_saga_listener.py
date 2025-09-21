@@ -41,8 +41,9 @@ class PulsarSagaChoreographyListener:
         self.subscription_prefix = 'saga-choreography'
         self.client = None
         self.consumers = {}
+
         self.coordinador = CoordinadorPartnersCoreografico()
-        
+
     def connect(self):
         """Conecta al broker de Pulsar y crea consumers para todos los tópicos"""
         try:
