@@ -3,11 +3,11 @@ from datetime import datetime, timezone
 from typing import Iterable, Sequence, Optional, List
 from sqlalchemy import and_, func, select, delete
 from sqlalchemy.exc import IntegrityError
-from src.infrastructure.models import ContratoRow
-from src.domain.models.contrato import Contrato
-from src.domain.ports.contrato_repository_port import ContratoRepositoryPort
-from src.infrastructure.db import SessionFactory
-from src.infrastructure.mappers import _domain_to_row, _row_to_domain
+from src.modulos.alianzas.infrastructure.models import ContratoRow
+from src.modulos.alianzas.domain.models.contrato import Contrato
+from src.modulos.alianzas.domain.ports.contrato_repository_port import ContratoRepositoryPort
+from src.modulos.alianzas.infrastructure.db import SessionFactory
+from src.modulos.alianzas.infrastructure.mappers import _domain_to_row, _row_to_domain
 from uuid import UUID
 
 class PostgresContratoRepository(ContratoRepositoryPort):

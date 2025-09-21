@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from uuid import UUID
-from src.domain.models.contrato import Contrato
+from src.modulos.alianzas.domain.models.contrato import Contrato
 
 class ContratoRepositoryPort(ABC):
     """Contrato repository interface."""

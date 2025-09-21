@@ -1,9 +1,9 @@
 # scripts/create_tables.py
 import asyncio
-from src.infrastructure.db import engine, Base
+from src.modulos.alianzas.infrastructure.db import engine, Base
 
 # 👇 IMPORTA tus modelos para que se registren en Base.metadata
-from src.infrastructure import models as _  # noqa: F401
+from src.modulos.alianzas.infrastructure import models as _  # noqa: F401
 
 async def main():
     async with engine.begin() as conn:

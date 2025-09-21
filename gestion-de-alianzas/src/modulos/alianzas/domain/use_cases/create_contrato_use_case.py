@@ -1,7 +1,7 @@
 # publicaciones_app/src/domain/use_cases/create_contrato_use_case.py
-from src.domain.models.contrato import Contrato
-from src.domain.ports.contrato_repository_port import ContratoRepositoryPort
-from src.domain.use_cases.base_use_case import BaseUseCase
+from src.modulos.alianzas.domain.models.contrato import Contrato
+from src.modulos.alianzas.domain.ports.contrato_repository_port import ContratoRepositoryPort
+from src.modulos.alianzas.domain.use_cases.base_use_case import BaseUseCase
 
 
 class CreateContratoUseCase(BaseUseCase):

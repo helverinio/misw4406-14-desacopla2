@@ -6,8 +6,8 @@ import logging
 from src.exceptions import setup_exception_handlers
 from src.config import Settings
 from src.entrypoints.api.routers.contrato_router import router as contrato_router
-from src.infrastructure.pulsar_integration import PulsarContratoConsumer, PulsarContratoPublisher
-from src.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
+from src.modulos.alianzas.infrastructure.pulsar_integration import PulsarContratoConsumer, PulsarContratoPublisher
+from src.modulos.alianzas.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

@@ -1,7 +1,7 @@
 FROM python:3.11.13-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential gcc libpq-dev pkg-config \
+    build-essential gcc libpq-dev pkg-config netcat-traditional \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

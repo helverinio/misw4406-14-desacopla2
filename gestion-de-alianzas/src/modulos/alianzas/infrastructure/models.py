@@ -4,7 +4,7 @@ from datetime import datetime, date
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
-from src.infrastructure.db import Base
+from src.modulos.alianzas.infrastructure.db import Base
 
 
 class ContratoRow(Base):

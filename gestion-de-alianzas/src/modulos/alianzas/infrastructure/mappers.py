@@ -1,7 +1,7 @@
 # publicaciones_app/src/infrastructure/mappers.py
 import uuid
-from src.infrastructure.models import ContratoRow
-from src.domain.models.contrato import Contrato, TipoContrato, EstadoContrato
+from src.modulos.alianzas.infrastructure.models import ContratoRow
+from src.modulos.alianzas.domain.models.contrato import Contrato, TipoContrato, EstadoContrato
 
 def _domain_to_row(c: Contrato) -> ContratoRow:
     return ContratoRow(

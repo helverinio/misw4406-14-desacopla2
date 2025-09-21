@@ -1,11 +1,11 @@
 import pulsar
 import json
-from src.domain.models.contrato import Contrato  # BaseModel
-from src.infrastructure.models import ContratoRow  # DB row
-from src.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
+from src.modulos.alianzas.domain.models.contrato import Contrato  # BaseModel
+from src.modulos.alianzas.infrastructure.models import ContratoRow  # DB row
+from src.modulos.alianzas.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
 from datetime import date, datetime
-from src.domain.models.contrato import TipoContrato, EstadoContrato
-from src.domain.use_cases.create_contrato_use_case import CreateContratoUseCase
+from src.modulos.alianzas.domain.models.contrato import TipoContrato, EstadoContrato
+from src.modulos.alianzas.domain.use_cases.create_contrato_use_case import CreateContratoUseCase
 from src.assembly import build_create_contrato_use_case
 import os
 import asyncio

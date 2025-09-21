@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from src.assembly import build_create_contrato_use_case
-from src.domain.models.contrato import Contrato
-from src.domain.use_cases.base_use_case import BaseUseCase
+from src.modulos.alianzas.domain.models.contrato import Contrato
+from src.modulos.alianzas.domain.use_cases.base_use_case import BaseUseCase
 from uuid import UUID
 
 router = APIRouter(prefix="/posts")
