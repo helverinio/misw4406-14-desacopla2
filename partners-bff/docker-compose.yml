@@ -8,5 +8,13 @@ services:
     ports:
       - "5000:8000"
     environment:
-      INTEGRATIONS_API_URL: http://localhost:5001
+      INTEGRATIONS_API_URL: http://gestion-integraciones:5001
       BROKER_URL: pulsar://broker:6650
+    networks:
+      - default
+      - main_default
+
+networks:
+  main_default:
+    external: true
+    name: misw4406-14-desacopla2_default

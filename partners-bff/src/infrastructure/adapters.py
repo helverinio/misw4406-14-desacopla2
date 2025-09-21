@@ -9,3 +9,8 @@ class PartnersAdapter:
         request = requests.get(f"{Settings.integrations_api_url()}/api/v1/partners")
 
         return request.json()
+    
+    def create_partner(self, partner_data: dict):
+        request = requests.post(f"{Settings.integrations_api_url()}/api/v1/partners", json=partner_data)
+        
+        return request.json(), request.status_code
