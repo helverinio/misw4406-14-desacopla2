@@ -9,7 +9,7 @@ import os
 # Agregar paths para imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
-from modulos.sagas.infraestructura.pulsar_saga_listener import PulsarSagaListener
+from modulos.sagas.infraestructura.pulsar_saga_listener import PulsarSagaChoreographyListener
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class SagaIntegration:
             
             def run_saga_listener():
                 try:
-                    self.saga_listener = PulsarSagaListener()
+                    self.saga_listener = PulsarSagaChoreographyListener()
                     self.saga_listener.listen()
                 except Exception as e:
                     logger.error(f"❌ Error in saga listener: {e}")
