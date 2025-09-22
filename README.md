@@ -425,10 +425,10 @@ Usar los comandos de Docker Compose mostrados anteriormente.
 
 ### Distribución de Actividades
 
-- **Carlos Garcia**: Arquitectura base, configuración Pulsar y despliegue
-- **Miguel Gomez**: Gestión de Alianzas (FastAPI), Docker Compose, eventos
-- **Helvert Wiesner**: Compliance
-- **Orlando Arnedo**: Gestión de Integraciones
+- **Carlos Garcia**: Arquitectura base, configuración Pulsar y despliegue, Gestión de Alianzas, Partners BFF
+- **Miguel Gomez**: Gestión de Alianzas (FastAPI), Partners BFF
+- **Helvert Wiesner**: Compliance, Gestión de Alianzas, Saga
+- **Orlando Arnedo**: Gestión de Integraciones, Saga, Escenarios de calidad y estrategia de pruebas
 
 ### Commits y Pull Requests
 Las contribuciones están registradas en el control de versiones con commits equitativos entre los miembros del equipo.
