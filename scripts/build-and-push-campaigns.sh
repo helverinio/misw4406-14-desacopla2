@@ -21,7 +21,7 @@ echo "🚀 Building and pushing Docker image..."
 echo "Image: ${FULL_IMAGE_NAME}"
 
 # Navigate to project root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../gestion-de-programas"
 
 # Configure Docker to use gcloud as a credential helper
 echo "📋 Configuring Docker authentication..."

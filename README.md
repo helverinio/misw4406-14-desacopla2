@@ -82,6 +82,30 @@ graph LR
 }
 ```
 
+## Decisión sobre Eventos y Esquemas
+
+En este proyecto se optó por utilizar **eventos de integración con carga mínima de estado** en lugar de eventos con el estado completo de la entidad. Esta decisión se tomó para reducir el acoplamiento entre microservicios y facilitar la evolución independiente de cada contexto, permitiendo que cada servicio mantenga su propio modelo de datos y lógica de negocio. Los eventos transportan únicamente la información relevante para la integración, evitando exponer detalles internos innecesarios.
+
+Para la serialización de eventos, se eligió **JSON** como formato inicial por su simplicidad, legibilidad y facilidad de integración con herramientas de desarrollo y debugging. Aunque tecnologías como **Avro** o **Protobuf** ofrecen ventajas en validación de esquemas y eficiencia, se consideró que para esta primera entrega la flexibilidad y rapidez de desarrollo de JSON es más conveniente. Sin embargo, la arquitectura está preparada para migrar a Avro o Protobuf en futuras iteraciones, especialmente si se requiere mayor performance, validación estricta o compatibilidad con un Schema Registry.
+
+Respecto al **versionado de eventos (Event Stream Versioning)**, se sigue una estrategia de evolución controlada: los eventos incluyen un campo de versión y se documentan los cambios en los esquemas. Esto permite que los consumidores puedan adaptarse progresivamente a nuevas versiones sin romper la compatibilidad, facilitando la evolución del sistema a medida que crecen los requerimientos de negocio.
+
+## TODO - diseño de los esquemas
+
+---
+
+## Patrones de Almacenamiento: CRUD vs Event Sourcing
+
+Para el almacenamiento de datos en los microservicios, se ha optado por una estrategia híbrida que combina el modelo clásico **CRUD** y el patrón **Event Sourcing**, seleccionando el más adecuado según las necesidades de cada contexto.
+
+- En los servicios de **Gestión de Integraciones** y **Compliance**, se utiliza un modelo CRUD tradicional, ya que estos dominios requieren operaciones directas y simples sobre los datos, priorizando la eficiencia en consultas y la facilidad de integración con herramientas estándar de bases de datos relacionales.
+
+- En el servicio de **Gestión de Alianzas**, se está explorando el uso de Event Sourcing para el manejo de contratos, permitiendo registrar cada cambio como un evento inmutable. Esto facilita la trazabilidad, auditoría y reconstrucción del estado de los contratos a lo largo del tiempo, lo cual es valioso en escenarios donde la historia de cambios es crítica.
+
+Esta combinación permite aprovechar las ventajas de ambos enfoques: la simplicidad y rendimiento del CRUD donde es suficiente, y la potencia de Event Sourcing donde la trazabilidad y la evolución del dominio lo requieren.
+
+---
+
 ### 2. Patrones de Almacenamiento 
 
 **Modelo Híbrido Implementado**:
@@ -188,8 +212,154 @@ POST /partners/validate
    - Docker Compose para cada servicio
    - Configuración de redes y volúmenes
 
+---
 
-## Instalación y Ejecución
+## Implementación de Saga Coreográfica (Entrega 5)
+
+### Descripción General
+
+Se implementó un patrón de **Saga Coreográfica** para gestionar transacciones distribuidas en el flujo de registro de partners y creación de contratos. Este patrón permite mantener la consistencia eventual entre microservicios sin necesidad de un coordinador central.
+
+### Flujo Principal de la Saga
+
+```mermaid
+graph TD
+    A[CreatePartner] --> B[PartnerCreated]
+    B --> C[ContratoCreado]
+    C --> D[ContratoAprobado/ContratoRechazado]
+    D --> E{Estado Final}
+    E -->|Aprobado| F[SAGA_COMPLETADA]
+    E -->|Rechazado| G[RevisionContrato]
+    G --> H[SAGA_PENDIENTE_REVISION]
+```
+
+### Eventos Implementados
+
+#### 1. Eventos Principales
+- **`CreatePartner`**: Inicia el proceso con datos de formulario y ID temporal
+- **`PartnerCreated`**: Partner creado exitosamente
+- **`ContratoCreado`**: Contrato generado automáticamente
+- **`ContratoAprobado`**: Contrato aprobado por compliance
+- **`ContratoRechazado`**: Contrato rechazado por compliance
+
+#### 2. Eventos de Compensación
+- **`PartnerCreationFailed`**: Error en creación de partner
+- **`ContratoCreadoFailed`**: Error en creación de contrato
+- **`RevisionContrato`**: Requiere revisión manual del contrato
+
+### Reglas de Coreografía
+
+El coordinador define las transiciones permitidas entre eventos:
+
+```python
+reglas_coreografia = {
+    CreatePartner: [PartnerCreated, PartnerCreationFailed],
+    PartnerCreated: [ContratoCreado, ContratoCreadoFailed],
+    PartnerCreationFailed: [],  # Fin de saga
+    ContratoCreado: [ContratoAprobado, ContratoRechazado],
+    ContratoCreadoFailed: [],  # Fin de saga
+    ContratoAprobado: [],  # Fin exitoso
+    ContratoRechazado: [RevisionContrato],
+    RevisionContrato: []  # Pendiente de revisión manual
+}
+```
+
+### Sistema de Logging y Seguimiento
+
+#### Base de Datos de Saga
+
+Se implementó un sistema completo de logging para seguimiento de sagas:
+
+#### Información Registrada
+
+Cada evento de la saga registra:
+- **ID de saga**: Identificador único para seguimiento
+- **Tipo de evento**: Nombre del evento procesado
+- **Datos del evento**: Payload completo en formato JSON
+- **Estado**: RECIBIDO, PROCESADO, ERROR
+- **Timestamps**: Momentos de recepción y procesamiento
+- **Partner ID**: Tanto temporal como real para trazabilidad
+
+#### Ejemplo de Log de Saga
+
+```json
+{
+  "saga_id": "98273896-af6f-4a48-ad1c-d4780d63d84f",
+  "tipo_evento": "PartnerCreated",
+  "evento_data": {
+    "partner_id": "dd4e7783-842a-467d-8279-93adde1e1e88",
+    "evento_tipo": "PartnerCreated",
+    "timestamp": "2025-09-22 04:21:22.409921"
+  },
+  "estado_procesamiento": "RECIBIDO"
+}
+```
+
+### Manejo de Estados y Compensaciones
+
+#### Estados de Saga
+- **`INICIADA`**: Saga creada por evento PartnerCreated
+- **`COMPLETADA`**: Flujo exitoso completado
+- **`FALLIDA`**: Error irrecuperable ocurrido
+- **`PENDIENTE_REVISION`**: Requiere intervención manual
+
+#### Compensaciones Implementadas
+
+##### 1. Compensación por Creación de Partner Fallida
+```python
+def _procesar_partner_creation_failed(self, evento):
+    logger.error(f"❌ PartnerCreationFailed for: {evento.partner_id}")
+    logger.error(f"🚫 Error: {evento.error_message}")
+    self.terminar(evento.partner_id, exitoso=False)
+```
+
+##### 2. Compensación por Contrato Rechazado
+```python
+def _procesar_contrato_rechazado(self, evento):
+    logger.error(f"❌ ContratoRechazado for partner: {evento.partner_id}")
+    logger.error(f"🔍 Compliance rejection: {evento.causa_rechazo}")
+    # No termina la saga - permite revisión
+```
+
+##### 3. Revisión Manual de Contratos
+- **Trigger**: Contrato rechazado por compliance
+- **Proceso**: Se envía evento `RevisionContrato` 
+- **Acción**: El módulo de alianzas actualiza estado a `RECHAZADO`
+- **Seguimiento**: Saga queda en estado `PENDIENTE_REVISION`
+
+### Manejo de IDs Temporales vs Reales
+
+
+### Consumer de Revisión de Contratos
+Se implementó un consumer dedicado para manejar eventos de revisión:
+
+```python
+class RevisionContratoConsumer:
+    def listen_sync(self):
+        while True:
+            msg = self.consumer.receive()
+            data = json.loads(msg.data().decode('utf-8'))
+            
+            # Buscar contrato por partner_id
+            contrato = await self.repository.get_by_partner_id(partner_id)
+            
+            # Actualizar estado a RECHAZADO
+            contrato.estado = EstadoContrato.RECHAZADO
+            await self.repository.update(contrato)
+```
+
+### Monitoreo y Observabilidad
+
+#### Logs Estructurados
+```python
+logger.info(f"🚀 Saga iniciada por PartnerCreated para partner: {partner_id}")
+logger.info(f"✅ Revision processed successfully for partner: {partner_id}")
+logger.error(f"❌ Error processing revision-contrato message: {e}")
+```
+
+
+
+## Instalación y Ejecución del ambiente
 
 ### Prerrequisitos
 - Docker y Docker Compose
@@ -296,3 +466,27 @@ class PartnerCreado:
 [entrega 4 desacoplados](https://youtu.be/u21-_RgLSeY)
 
 
+### Entrega 5
+
+#### Activar Infraestructura
+
+  ### Crear red para los servicios
+  docker network create misw4406-14-desacopla2_default
+
+  ##### Iniciar Apache Pulsar
+  docker-compose -f docker-compose.pulsar.yml up
+
+ ##### Gestión de Integraciones
+ docker-compose up --build
+ database: 5434
+ servicio: 5001
+
+##### Gestión de Alianzas
+ docker-compose up --build
+ database: 5435
+ servicio: 5001
+
+##### Compliance
+ docker-compose up --build
+ database: 5436
+ servicio: 5004

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alliances-service.fullname" . }}-config
+  labels:
+    {{- include "alliances-service.labels" . | nindent 4 }}
+data:
+  DATABASE_URL: "postgresql+asyncpg://{{ .Values.database.user }}:{{ .Values.secrets.postgresPassword | b64dec }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+  DATABASE_URL_SYNC: "postgresql://{{ .Values.database.user }}:{{ .Values.secrets.postgresPassword | b64dec }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+  BROKER_URL: {{ .Values.broker.url | quote }}

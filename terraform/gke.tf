@@ -6,14 +6,21 @@ resource "google_compute_global_address" "alpespartners_api_ip" {
 resource "google_compute_global_address" "campaigns_api_ip" {
   name = "campaigns-api-ip"
 }
+
 resource "google_compute_global_address" "alliances_api_ip" {
   name = "alliances-api-ip"
 }
+
 resource "google_compute_global_address" "integrations_api_ip" {
   name = "integrations-api-ip"
 }
+
 resource "google_compute_global_address" "compliance_api_ip" {
   name = "compliance-api-ip"
+}
+
+resource "google_compute_global_address" "partners_bff_api_ip" {
+  name = "partners-bff-api-ip"
 }
 
 # Create GKE cluster

@@ -1,6 +1,7 @@
 from alpespartners.seedwork.infrastructura.schema.v1.eventos import EventoIntegracion
 from alpespartners.seedwork.infrastructura.utils import time_millis
 import uuid
+from pulsar.schema import Record, String, Long
 
 class ContratoCreadoPayload(Record):
     contrato_id = String()

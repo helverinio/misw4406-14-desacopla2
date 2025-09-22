@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  gestion-alianzas-db:
+    image: postgres:16
+    container_name: gestion-alianzas-db
+    environment:
+      POSTGRES_DB: gestion_alianzas
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres_user -d gestion_alianzas -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - alianzas_pgdata:/var/lib/postgresql/data
+    networks:
+      - alianzas-network
+
+  gestion-alianzas:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gestion-alianzas-app
+    ports:
+      - "8001:8001"
+    environment:
+      # Variables de base de datos
+      - DATABASE_URL=postgresql+asyncpg://postgres_user:1234@gestion-alianzas-db:5432/gestion_alianzas
+      - DATABASE_URL_SYNC=postgresql://postgres_user:1234@gestion-alianzas-db:5432/gestion_alianzas
+      - POSTGRES_HOST=gestion-alianzas-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=gestion_alianzas
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=1234
+      
+      # Variable de Pulsar (usa broker para conexión interna de Docker)
+      - BROKER_URL=pulsar://broker:6650
+      
+      # Variable de entorno Python
+      - PYTHONPATH=/app/src
+    depends_on:
+      gestion-alianzas-db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    networks:
+      - alianzas-network
+      - misw4406-14-desacopla2_default  # Red externa donde está Pulsar
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🚀 Iniciando Gestión de Alianzas...' &&
+        python -m src.scripts.create_tables &&
+        echo '✅ Tablas creadas' &&
+        uvicorn src.entrypoints.api.main:app --host 0.0.0.0 --port 8001 --reload
+      "
+
+volumes:
+  alianzas_pgdata:
+
+networks:
+  alianzas-network:
+    driver: bridge
+  misw4406-14-desacopla2_default:
+    external: true

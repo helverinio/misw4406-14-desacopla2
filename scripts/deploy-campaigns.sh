@@ -8,8 +8,8 @@ set -e
 # Configuration
 RELEASE_NAME=${1:-campaigns-service}
 NAMESPACE=${2:-alpespartners}
-CHART_PATH="terraform/charts/campaigns-service"
-VALUES_FILE="terraform/charts/campaigns-service/values.yaml"
+CHART_PATH="helm/campaigns-service"
+VALUES_FILE="helm/campaigns-service/values.yaml"
 
 echo "🚀 Deploying campaigns-service with Helm..."
 echo "Release: ${RELEASE_NAME}"
