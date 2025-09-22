@@ -4,6 +4,10 @@ from datetime import date, datetime
 import os
 import asyncio
 import random, uuid
+
+from pulsar.schema import AvroSchema
+from src.infrastructure.eventos.schema.v1.eventos import ComandoCrearPartner
+
 PULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
 TOPIC = 'comando-crear-partner'
 
@@ -11,7 +15,7 @@ TOPIC = 'comando-crear-partner'
 class PulsarContratoPublisher:
     def __init__(self):
         self.client = pulsar.Client(PULSAR_SERVICE_URL)
-        self.producer = self.client.create_producer(TOPIC)
+        self.producer = self.client.create_producer(TOPIC, schema=AvroSchema(ComandoCrearPartner))
 
     # topico comando-crear-partner
     # def publish_contrato(self, contrato: Contrato):
