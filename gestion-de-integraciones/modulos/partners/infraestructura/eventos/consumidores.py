@@ -61,7 +61,7 @@ class ConsumidorEventos:
         self.cliente = None
         self.topico = topico
         self.procesador = procesador
-        self.subscription_name = f"gestion-integraciones.{topico}.{uuid4()}"
+        self.subscription_name = f"gestion-integraciones.{topico}"
         self.schema_class = schema_class
 
     def _crear_consumidor(self, topico, schema_class, subscription_name):
