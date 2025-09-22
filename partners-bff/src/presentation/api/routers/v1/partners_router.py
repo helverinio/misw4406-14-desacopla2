@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from src.application.services import PartnersService
 from src.infrastructure.pulsar_integration import PulsarContratoPublisher
 from fastapi import status
-import json
+from src.infrastructure.mappers import MapeadorComandoCrearPartner
 
 router = APIRouter(prefix="/v1/partners")
 
@@ -22,7 +22,9 @@ async def create_partner(partner_data: dict):
     """
     publisher = PulsarContratoPublisher()
     try:
-        publisher.producer.send(json.dumps(partner_data).encode('utf-8'))
+        evento = MapeadorComandoCrearPartner().parse_dict(partner_data)
+
+        publisher.producer.send(evento)
     finally:
         publisher.close()
     return {"message": "Evento de creación de partner publicado"}, status.HTTP_202_ACCEPTED
