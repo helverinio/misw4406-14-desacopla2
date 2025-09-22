@@ -21,15 +21,8 @@ from modulos.sagas.dominio.eventos import (
     ContratoCreado, ContratoCreadoFailed
 )
 
-# Importar el servicio de logging de saga directamente
-try:
-    from modulos.sagas.aplicacion.servicios.saga_log_service import SagaLogService
-    from modulos.sagas.infraestructura.repositorios.saga_log_repository import SagaLogRepository
-    LOGGING_AVAILABLE = True
-except ImportError:
-    LOGGING_AVAILABLE = False
-    SagaLogService = None
-    SagaLogRepository = None
+from modulos.sagas.aplicacion.servicios.saga_log_service import SagaLogService
+from modulos.sagas.infraestructura.repositorios.saga_log_repository import SagaLogRepository
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +38,7 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         self.estado_saga = {}  # Para trackear el estado de cada saga por partner_id
         
         # Crear servicio de logging directamente si no se proporciona
-        if saga_log_service is None and LOGGING_AVAILABLE:
+        if saga_log_service is None:
             try:
                 repository = SagaLogRepository()
                 self.saga_log_service = SagaLogService(repository)

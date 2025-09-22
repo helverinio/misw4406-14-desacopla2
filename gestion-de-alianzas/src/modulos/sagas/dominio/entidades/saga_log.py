@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Optional
 import uuid
 
+from src.seedwork.dominio.entidades import Entidad
 
 class EstadoEvento(Enum):
     """Estados posibles para el procesamiento de eventos en la saga."""
@@ -15,21 +16,20 @@ class EstadoEvento(Enum):
 
 
 @dataclass
-class SagaLog:
+class SagaLog(Entidad):
     """Entidad de dominio que representa un log de evento de saga."""
     
     # Atributos de identidad
-    id: str
-    saga_id: str
+    saga_id: str = ""
     
     # Información del evento
-    tipo_evento: str
-    evento_data: str  # JSON serializado del evento
-    
+    tipo_evento: str = ""
+    evento_data: str = ""  # JSON serializado del evento
+
     # Información de procesamiento
-    estado: EstadoEvento
-    timestamp: datetime
-    
+    estado: EstadoEvento = EstadoEvento.RECIBIDO
+    timestamp: datetime = datetime.utcnow()
+
     # Información adicional
     mensaje_error: Optional[str] = None
     intentos: int = 1

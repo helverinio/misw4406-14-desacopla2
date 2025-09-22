@@ -31,6 +31,7 @@ services:
     environment:
       # Variables de base de datos
       - DATABASE_URL=postgresql+asyncpg://postgres_user:1234@gestion-alianzas-db:5432/gestion_alianzas
+      - DATABASE_URL_SYNC=postgresql://postgres_user:1234@gestion-alianzas-db:5432/gestion_alianzas
       - POSTGRES_HOST=gestion-alianzas-db
       - POSTGRES_PORT=5432
       - POSTGRES_DB=gestion_alianzas
