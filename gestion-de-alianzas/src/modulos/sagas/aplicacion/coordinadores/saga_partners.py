@@ -90,14 +90,25 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
     def terminar(self, partner_id: str, exitoso: bool = True):
         """Termina la saga para un partner"""
         estado_final = 'COMPLETADA' if exitoso else 'FALLIDA'
+        
+        # Validar que la saga existe y no está ya finalizada
+        if partner_id not in self.estado_saga:
+            logger.warning(f"⚠️ Intentando terminar saga inexistente para partner: {partner_id}")
+            return
+        
+        estado_actual = self.estado_saga[partner_id].get('estado', 'INICIADA')
+        if estado_actual in ['COMPLETADA', 'FALLIDA']:
+            logger.warning(f"⚠️ Saga ya finalizada para partner {partner_id} en estado: {estado_actual}")
+            return
+        
         logger.info(f"🏁 Partner saga {estado_final.lower()} for: {partner_id}")
         
-        if partner_id in self.estado_saga:
-            saga_id = self.estado_saga[partner_id].get('saga_id')
-            self.estado_saga[partner_id]['estado'] = estado_final
-            
-            # Registrar fin de saga en el log
-            if self.saga_log_service and saga_id:
+        saga_id = self.estado_saga[partner_id].get('saga_id')
+        self.estado_saga[partner_id]['estado'] = estado_final
+        
+        # Registrar fin de saga en el log
+        if self.saga_log_service and saga_id:
+            try:
                 self.saga_log_service.registrar_evento_recibido(
                     saga_id=saga_id,
                     tipo_evento="SAGA_FINALIZADA",
@@ -107,6 +118,9 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
                         "exitoso": exitoso
                     }
                 )
+                logger.info(f"📝 Finalización de saga registrada en BD: {saga_id}")
+            except Exception as e:
+                logger.error(f"❌ Error registrando finalización de saga: {e}")
 
     def persistir_en_saga_log(self, mensaje):
         """
@@ -141,16 +155,19 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         try:
             partner_id = getattr(evento, 'partner_id', 'unknown')
             
-            # Solo iniciar la saga si es el evento CreatePartner
+            # Manejar eventos especiales que no requieren saga iniciada
+            if isinstance(evento, CreatePartner):
+                # CreatePartner solo se loggea, NO inicia la saga
+                logger.info(f"📝 CreatePartner recibido - solo logging: {partner_id}")
+                self._log_evento_sin_saga(evento)
+                self._procesar_evento_interno(evento)
+                return
+            
+            # Solo iniciar la saga si es el evento PartnerCreated
             if partner_id not in self.estado_saga:
-                if isinstance(evento, CreatePartner):
-                    self.iniciar(partner_id)
-                    logger.info(f"🚀 Saga iniciada por CreatePartner para partner: {partner_id}")
-                else:
-                    # Si no existe saga y no es CreatePartner, es un error
-                    logger.warning(f"⚠️ Evento {type(evento).__name__} recibido sin saga iniciada para partner: {partner_id}")
-                    logger.warning(f"🔄 Iniciando saga de emergencia para continuar el flujo")
-                    self.iniciar(partner_id)
+                if isinstance(evento, PartnerCreated):
+                    self.iniciar(partner_id)  # Usar el ID real del partner creado
+                    logger.info(f"🚀 Saga iniciada por PartnerCreated para partner: {partner_id}")
             
             saga_id = self.estado_saga[partner_id].get('saga_id')
             self.estado_saga[partner_id]['eventos'].append(type(evento).__name__)
@@ -160,7 +177,7 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
                 try:
                     # Convertir evento a dict para serializar
                     evento_data = {
-                        'partner_id': partner_id,
+                        'partner_id': partner_id,  # Usar el partner_id
                         'evento_tipo': type(evento).__name__,
                         'timestamp': str(getattr(evento, 'fecha_evento', 'N/A'))
                     }
@@ -221,15 +238,18 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
 
     def _procesar_create_partner(self, evento: CreatePartner):
         """
-        Procesa evento CreatePartner - punto de inicio de la saga
+        Procesa evento CreatePartner - solo logging, NO inicia saga
+        La saga se iniciará cuando llegue PartnerCreated
         """
-        logger.info(f"🎯 [CHOREOGRAPHY] CreatePartner received for: {evento.partner_id}")
-        logger.info(f"⏭️  Next expected: PartnerCreated or PartnerCreationFailed")
+        logger.info(f"📝 [CHOREOGRAPHY] CreatePartner received: {evento.partner_id}")
+        logger.info(f"📄 Partner data: {evento.partner_id}")
+        logger.info(f"⏭️ Waiting for PartnerCreated to start saga")
         
 
     def _procesar_partner_created(self, evento: PartnerCreated):
         """
         Procesa evento PartnerCreated - partner creado exitosamente
+        En este punto la saga ya fue iniciada por este mismo evento
         """
         logger.info(f"✅ [CHOREOGRAPHY] PartnerCreated received for: {evento.partner_id}")
         logger.info(f"⏭️  Next expected: ContratoCreado or ContratoCreadoFailed")
@@ -314,6 +334,32 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         if saga_id:
             return self.saga_log_service.obtener_historial_saga(saga_id)
         return []
+
+    def _log_evento_sin_saga(self, evento: EventoDominio):
+        """
+        Registra eventos que no requieren saga iniciada (como CreatePartner)
+        """
+        if self.saga_log_service:
+            try:
+                # Generar un ID único para este evento sin saga
+                evento_id = str(uuid.uuid4())
+                
+                evento_data = {
+                    'partner_id': getattr(evento, 'partner_id', 'unknown'),
+                    'evento_tipo': type(evento).__name__,
+                    'timestamp': str(getattr(evento, 'fecha_evento', 'N/A')),
+                    'sin_saga': True  # Marcar que este evento no tiene saga asociada
+                }
+                
+                self.saga_log_service.registrar_evento_recibido(
+                    saga_id=evento_id,  # Usar evento_id como saga_id para eventos sin saga
+                    tipo_evento=type(evento).__name__,
+                    evento_data=evento_data
+                )
+                logger.info(f"📝 Evento {type(evento).__name__} registrado en BD sin saga: {evento_id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Error registrando evento sin saga en BD: {e}")
 
 
 # Listener function para redireccionar eventos de dominio

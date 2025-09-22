@@ -4,6 +4,7 @@ Listener para eventos de Pulsar relacionados con la saga coreográfica de partne
 import pulsar
 import json
 import logging
+import uuid
 from datetime import datetime
 import asyncio
 import os
@@ -39,6 +40,7 @@ class PulsarSagaChoreographyListener:
             'ContratoCreado': ContratoCreado,
             'contrato-aprobado': ContratoAprobado,   # Nuevo: resultado de compliance
             'contrato-rechazado': ContratoRechazado, # Nuevo: rechazo de compliance
+            'revision-contrato': RevisionContrato,   # Nuevo: revisión de contrato
         }
         
         self.subscription_prefix = 'saga-choreography'
@@ -107,6 +109,8 @@ class PulsarSagaChoreographyListener:
                 evento = self._process_contrato_aprobado_message(content)
             elif topic == 'contrato-rechazado':
                 evento = self._process_contrato_rechazado_message(content)
+            elif topic == 'revision-contrato':
+                evento = self._process_revision_contrato_message(content)
             
             if evento:
                 logger.info(f"✨ Created event: {type(evento).__name__} for partner_id: {evento.partner_id}")
@@ -120,33 +124,113 @@ class PulsarSagaChoreographyListener:
 
 
     
-    def _process_create_partner_message(self, content: str) -> CreatePartner:
-        """Procesa mensajes del topic comando-crear-partner y crea eventos CreatePartner"""
+    def _extract_partner_id_from_content(self, content: str, content_type: str = "unknown") -> str:
+        """
+        Extrae partner_id de diferentes tipos de contenido, manejando casos especiales
+        """
         try:
-            # Intentar parsear como JSON
+            # Intentar parsear como JSON primero
             try:
                 data = json.loads(content)
                 partner_id = data.get("partner_id")
-                if not partner_id:
-                    partner_id = str(data)
+                if partner_id and isinstance(partner_id, str):
+                    # Validar que no sea un formulario completo
+                    if self._is_valid_partner_id(partner_id):
+                        return partner_id
+                    else:
+                        # Intentar extraer UUID del contenido malformado
+                        extracted_id = self._extract_uuid_from_malformed_content(partner_id)
+                        if extracted_id:
+                            logger.warning(f"⚠️ Extracted UUID from malformed partner_id: {extracted_id}")
+                            return extracted_id
+                
+                # Si no hay partner_id válido, usar el string completo
+                partner_id = str(data)
+                
             except json.JSONDecodeError:
                 # Si no es JSON válido, limpiar el contenido
                 clean_content = ''.join(char for char in content if char.isprintable())
-                logger.info(f'📥 Cleaned content: {clean_content}')
+                logger.info(f'📥 Cleaned {content_type} content: {clean_content[:100]}...')
                 
                 # Manejar el prefijo 'H' como en el consumer existente
                 if clean_content and clean_content[0] == 'H':
                     partner_id = clean_content[1:]  # Remover el prefijo 'H'
-                    logger.info(f'📥 Extracted partner_id from prefixed message: {partner_id}')
+                    logger.info(f'📥 Extracted partner_id from prefixed message: {partner_id[:50]}...')
                 else:
                     partner_id = clean_content
-                    logger.info(f'📥 Using content as partner_id: {partner_id}')
+                    logger.info(f'📥 Using content as partner_id: {partner_id[:50]}...')
             
+            # Validar que el partner_id extraído sea válido
             if not partner_id:
-                raise ValueError(f"No se pudo extraer partner_id del mensaje: {content}")
+                raise ValueError(f"No se pudo extraer partner_id del mensaje: {content[:100]}...")
             
-            logger.info(f"✅ Created CreatePartner event for partner_id: {partner_id}")
-            return CreatePartner(partner_id=partner_id)
+            # Si es demasiado largo, probablemente sea malformado
+            if len(partner_id) > 200:
+                logger.warning(f"⚠️ Partner ID muy largo ({len(partner_id)} chars), posiblemente malformado")
+                # Intentar extraer UUID
+                extracted_id = self._extract_uuid_from_malformed_content(partner_id)
+                if extracted_id:
+                    logger.info(f"✅ Extracted UUID from long content: {extracted_id}")
+                    return extracted_id
+                else:
+                    # Usar los primeros 50 caracteres como fallback
+                    partner_id = partner_id[:50]
+                    logger.warning(f"⚠️ Using truncated partner_id: {partner_id}")
+            
+            return partner_id
+            
+        except Exception as e:
+            logger.error(f"❌ Error extracting partner_id from {content_type}: {e}")
+            raise
+    
+    def _is_valid_partner_id(self, partner_id: str) -> bool:
+        """
+        Valida si un partner_id tiene formato válido (UUID o ID corto)
+        """
+        import re
+        
+        # Verificar si es UUID
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        if re.match(uuid_pattern, partner_id, re.IGNORECASE):
+            return True
+        
+        # Verificar si es un ID corto (alfanumérico, menos de 50 chars, sin espacios)
+        if len(partner_id) < 50 and partner_id.replace('-', '').replace('_', '').isalnum():
+            return True
+        
+        # Si contiene símbolos de email, teléfono o direcciones, probablemente es malformado
+        if any(char in partner_id for char in ['@', '+', ',', ' ']):
+            return False
+        
+        return True
+    
+    def _extract_uuid_from_malformed_content(self, content: str) -> str:
+        """
+        Intenta extraer un UUID de contenido malformado
+        """
+        import re
+        
+        # Buscar patrón UUID en el contenido
+        uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+        match = re.search(uuid_pattern, content, re.IGNORECASE)
+        
+        if match:
+            return match.group(0)
+        
+        return None
+    
+    def _process_create_partner_message(self, content: str) -> CreatePartner:
+        """Procesa mensajes del topic comando-crear-partner y crea eventos CreatePartner"""
+        try:
+            # Para CreatePartner, generamos un ID temporal ya que el partner aún no existe
+            # El contenido contiene los datos del formulario para crear el partner
+            temp_partner_id = f"temp-{str(uuid.uuid4())[:8]}"
+            
+            logger.info(f"📝 CreatePartner received with form data: {content[:100]}...")
+            logger.info(f"🆔 Generated temporary partner_id: {temp_partner_id}")
+            logger.info(f"⏭️ Real partner_id will come from PartnerCreated event")
+            
+            return CreatePartner(partner_id=temp_partner_id)
             
         except Exception as e:
             logger.error(f"❌ Error processing CreatePartner message: {e}")
@@ -155,27 +239,7 @@ class PulsarSagaChoreographyListener:
     def _process_partner_created_message(self, content: str) -> PartnerCreated:
         """Procesa mensajes del topic PartnerCreado y crea eventos PartnerCreated"""
         try:
-            # Intentar parsear como JSON
-            try:
-                data = json.loads(content)
-                partner_id = data.get("partner_id")
-                if not partner_id:
-                    partner_id = str(data)
-            except json.JSONDecodeError:
-                # Si no es JSON válido, limpiar el contenido
-                clean_content = ''.join(char for char in content if char.isprintable())
-                logger.info(f'📥 Cleaned content: {clean_content}')
-                
-                # Manejar el prefijo 'H' como en el consumer existente
-                if clean_content and clean_content[0] == 'H':
-                    partner_id = clean_content[1:]  # Remover el prefijo 'H'
-                    logger.info(f'📥 Extracted partner_id from prefixed message: {partner_id}')
-                else:
-                    partner_id = clean_content
-                    logger.info(f'📥 Using content as partner_id: {partner_id}')
-            
-            if not partner_id:
-                raise ValueError(f"No se pudo extraer partner_id del mensaje: {content}")
+            partner_id = self._extract_partner_id_from_content(content, "PartnerCreated")
             
             logger.info(f"✅ Created PartnerCreated event for partner_id: {partner_id}")
             return PartnerCreated(partner_id=partner_id)
@@ -248,6 +312,31 @@ class PulsarSagaChoreographyListener:
             logger.error(f"❌ Error processing ContratoRechazado message: {e}")
             raise
     
+    def _process_revision_contrato_message(self, content: str) -> RevisionContrato:
+        """Procesa mensajes del topic revision-contrato"""
+        try:
+            # Parsear JSON del evento de revisión
+            data = json.loads(content)
+            logger.info(f"🔄 Revision contrato data parsed: {data}")
+            
+            return RevisionContrato(
+                partner_id=data.get('partner_id', ''),
+                contrato_id=data.get('contrato_id', 'unknown'),
+                monto=data.get('monto', 0.0),
+                moneda=data.get('moneda', 'USD'),
+                estado=data.get('estado', 'REQUIERE_REVISION'),
+                tipo=data.get('tipo', 'STANDARD'),
+                fecha_revision=data.get('fecha_revision', ''),
+                causa_rechazo_original=data.get('causa_rechazo_original', ''),
+                validacion_fallida=data.get('validacion_fallida', ''),
+                requiere_revision_manual=data.get('requiere_revision_manual', True),
+                comentarios_revision=data.get('causa_rechazo_original', '')  # Usar causa como comentario
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Error processing RevisionContrato message: {e}")
+            raise
+    
     def listen_topic(self, topic: str):
         """
         Escucha continuamente un tópico específico
@@ -269,6 +358,8 @@ class PulsarSagaChoreographyListener:
                         self._handle_contrato_aprobado(evento)
                     elif isinstance(evento, ContratoRechazado):
                         self._handle_contrato_rechazado(evento)
+                    elif isinstance(evento, RevisionContrato):
+                        self._handle_revision_contrato(evento)
                     else:
                         # Procesar el evento en la saga coreográfica normal
                         self.coordinador.procesar_evento(evento)
@@ -292,11 +383,8 @@ class PulsarSagaChoreographyListener:
             logger.info(f"📋 Detalles: Contrato {evento.contrato_id}, Monto: {evento.monto} {evento.moneda}")
             logger.info(f"✅ Validaciones pasadas: {', '.join(evento.validaciones_pasadas)}")
             
-            # Procesar en la saga para finalizar exitosamente
+            # Procesar en la saga - el coordinador ya maneja la finalización
             self.coordinador.procesar_evento(evento)
-            
-            # Finalizar la saga exitosamente
-            self.coordinador.terminar(evento.partner_id, exitoso=True)
             
             logger.info(f"🏁 Saga completada exitosamente para partner {evento.partner_id}")
             
@@ -349,13 +437,33 @@ class PulsarSagaChoreographyListener:
             else:
                 logger.warning("⚠️ Producer de revisión no disponible")
             
-            # Finalizar la saga con fallo (se creó revisión)
-            self.coordinador.terminar(evento.partner_id, exitoso=False)
-            
-            logger.info(f"🔄 Saga terminada con revisión pendiente para partner {evento.partner_id}")
+            # Finalizar la saga con fallo solo si no requiere revisión manual
+            # La revisión manual puede llevar a aprobación posterior
+            logger.info(f"🔄 Saga en estado de revisión pendiente para partner {evento.partner_id}")
+            logger.info(f"📝 Se publicará evento RevisionContrato para revisión manual")
             
         except Exception as e:
             logger.error(f"❌ Error manejando contrato rechazado: {e}")
+            raise
+    
+    def _handle_revision_contrato(self, evento: RevisionContrato):
+        """Maneja eventos de revisión de contrato - registra la revisión pendiente"""
+        try:
+            logger.info(f"🔄 Contrato en REVISIÓN para partner {evento.partner_id}")
+            logger.info(f"📋 Detalles: Contrato {evento.contrato_id}, Monto: {evento.monto} {evento.moneda}")
+            logger.info(f"⚠️ Causa revisión: {evento.causa_rechazo_original}")
+            logger.info(f"🔍 Validación que falló: {evento.validacion_fallida}")
+            
+            # Procesar en la saga para registrar la revisión
+            self.coordinador.procesar_evento(evento)
+            
+            # Nota: La saga NO termina aquí, queda en estado de revisión pendiente
+            # esperando un nuevo ContratoAprobado o ContratoRechazado después de la revisión
+            logger.info(f"⏳ Saga mantiene estado de revisión pendiente para partner {evento.partner_id}")
+            logger.info(f"📝 Esperando resolución de revisión manual...")
+            
+        except Exception as e:
+            logger.error(f"❌ Error manejando revisión de contrato: {e}")
             raise
     
     def listen(self):

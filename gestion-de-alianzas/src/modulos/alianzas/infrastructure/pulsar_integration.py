@@ -102,7 +102,7 @@ class PulsarContratoConsumer:
                         monto=round(random.uniform(100, 10000), 2),
                         moneda=random.choice(monedas),
                         condiciones=random.choice(condiciones_list),
-                        estado=EstadoContrato.ACTIVO,
+                        estado=random.choice(estados),
                         fecha_creacion=datetime.utcnow(),
                         fecha_actualizacion=None
                     )
