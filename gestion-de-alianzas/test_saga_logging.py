@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # Importar componentes necesarios
-from modulos.sagas.aplicacion.servicios.saga_log_service_factory import SagaLogServiceFactory
-from modulos.sagas.dominio.eventos import CreatePartner, ContratoCreado
-from modulos.sagas.aplicacion.coordinadores.saga_partners import CoordinadorPartnersCoreografico
+from src.modulos.sagas.aplicacion.servicios.saga_log_service import SagaLogServiceFactory
+from src.modulos.sagas.dominio.eventos import CreatePartner, ContratoCreado
+from src.modulos.sagas.aplicacion.coordinadores.saga_partners import CoordinadorPartnersCoreografico
 
 async def test_saga_logging():
     """Prueba el sistema de logging de saga completo"""

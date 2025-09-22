@@ -63,6 +63,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "alliances-service.fullname" . }}-config
                   key: DATABASE_URL
+            - name: DATABASE_URL_SYNC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "alliances-service.fullname" . }}-config
+                  key: DATABASE_URL_SYNC
             - name: BROKER_URL
               valueFrom:
                 configMapKeyRef:
