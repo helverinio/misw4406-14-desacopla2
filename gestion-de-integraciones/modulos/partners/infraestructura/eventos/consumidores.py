@@ -1,6 +1,6 @@
 import pulsar
 import _pulsar
-from pulsar.schema import AvroSchema
+from pulsar.schema import AvroSchema, JsonSchema
 import logging
 import traceback
 import os
@@ -65,17 +65,46 @@ class ConsumidorEventos:
         self.schema_class = schema_class
 
     def _crear_consumidor(self, topico, schema_class, subscription_name):
-        """Crea un consumidor para un tópico específico"""
+        """Crea un consumidor para un tópico específico con manejo de esquemas"""
         if not self.cliente:
             self.cliente = pulsar.Client(broker_url())
 
-        consumidor = self.cliente.subscribe(
-            topico,
-            consumer_type=_pulsar.ConsumerType.Shared,
-            subscription_name=subscription_name,
-            schema=AvroSchema(schema_class),
-        )
-        return consumidor
+        try:
+            # ✅ Primero intentar con AvroSchema
+            consumidor = self.cliente.subscribe(
+                topico,
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name=subscription_name,
+                schema=AvroSchema(schema_class),
+            )
+            logging.info(f"✅ Suscrito con AvroSchema a {topico}")
+            return consumidor
+            
+        except _pulsar.IncompatibleSchema as e:
+            logging.warning(f"⚠️ Schema incompatible con AvroSchema: {e}")
+            
+            try:
+                # ✅ Intentar con JsonSchema como fallback
+                consumidor = self.cliente.subscribe(
+                    topico,
+                    consumer_type=_pulsar.ConsumerType.Shared,
+                    subscription_name=subscription_name,
+                    schema=JsonSchema(schema_class),
+                )
+                logging.info(f"✅ Suscrito con JsonSchema a {topico}")
+                return consumidor
+                
+            except _pulsar.IncompatibleSchema as e2:
+                logging.warning(f"⚠️ Schema incompatible con JsonSchema: {e2}")
+                
+                # ✅ Como último recurso, suscribirse sin schema
+                consumidor = self.cliente.subscribe(
+                    topico,
+                    consumer_type=_pulsar.ConsumerType.Shared,
+                    subscription_name=subscription_name,
+                )
+                logging.info(f"✅ Suscrito sin schema a {topico}")
+                return consumidor
 
     def suscribirse(self):
         """Suscribe a eventos que este servicio debe procesar"""

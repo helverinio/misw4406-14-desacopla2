@@ -21,23 +21,11 @@ class CreatePartnerHandler(Handler):
         logger.info(f"🎯 Processing CreatePartner event for partner_id: {evento.partner_id}")
         
         try:
-            # Aquí iría la lógica de negocio para crear el partner
-            # Por ahora, simulamos el proceso
-            
             # Validar que el partner_id sea válido
             if not evento.partner_id or len(evento.partner_id) < 3:
                 raise ValueError("partner_id debe tener al menos 3 caracteres")
             
-            # Simular procesamiento del partner
             logger.info(f"✨ Creating partner with ID: {evento.partner_id}")
-            
-            # Aquí se podría:
-            # 1. Validar datos del partner
-            # 2. Crear registros en base de datos
-            # 3. Enviar notificaciones
-            # 4. Integrar con sistemas externos
-            
-            # Simular éxito
             logger.info(f"✅ Partner {evento.partner_id} created successfully")
             
             # Generar evento de éxito

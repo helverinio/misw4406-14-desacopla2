@@ -3,6 +3,13 @@ Comando para procesar compliance de contratos
 """
 from dataclasses import dataclass
 from datetime import datetime
+import json
+import logging
+import os
+import pulsar
+from pulsar.schema import JsonSchema, Record
+import uuid
+
 from alpespartners.modulos.compliance.aplicacion.dto import PaymentDTO
 from alpespartners.modulos.compliance.aplicacion.mapeadores import MapeadorPayment
 from alpespartners.modulos.compliance.infraestructura.repositorios import RepositorioPaymentPostgress
@@ -11,8 +18,6 @@ from alpespartners.seedwork.aplicacion.comandos import Comando
 from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
 from alpespartners.modulos.compliance.dominio.entidades import Payment
 import alpespartners.modulos.compliance.dominio.objetos_valor as ov
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +34,72 @@ class ProcesarComplianceContrato(Comando):
     fecha_fin: str = None
 
 
+class ContratoAprobado(Record):
+    """Evento para contrato aprobado"""
+    partner_id = pulsar.schema.String()
+    contrato_id = pulsar.schema.String()
+    monto = pulsar.schema.Double()
+    moneda = pulsar.schema.String()
+    estado = pulsar.schema.String()
+    tipo = pulsar.schema.String()
+    fecha_aprobacion = pulsar.schema.String()
+    validaciones_pasadas = pulsar.schema.Array(pulsar.schema.String())
+
+
+class ContratoRechazado(Record):
+    """Evento para contrato rechazado"""
+    partner_id = pulsar.schema.String()
+    contrato_id = pulsar.schema.String()
+    monto = pulsar.schema.Double()
+    moneda = pulsar.schema.String()
+    estado = pulsar.schema.String()
+    tipo = pulsar.schema.String()
+    fecha_rechazo = pulsar.schema.String()
+    causa_rechazo = pulsar.schema.String()
+    validacion_fallida = pulsar.schema.String()
+
+
 class ProcesarComplianceContratoHandler(ComandoBaseHandler):
+    def __init__(self):
+        super().__init__()
+        self.cliente_pulsar = None
+        self.producer_aprobado = None
+        self.producer_rechazado = None
+        self._inicializar_pulsar()
+    
+    def _inicializar_pulsar(self):
+        """Inicializa cliente y productores de Pulsar"""
+        try:
+            broker_url = os.getenv('BROKER_URL', 'pulsar://broker:6650')
+            self.cliente_pulsar = pulsar.Client(broker_url)
+            
+            # Crear productores para los eventos de saga
+            self.producer_aprobado = self.cliente_pulsar.create_producer(
+                'contrato-aprobado',
+                schema=pulsar.schema.AvroSchema(ContratoAprobado)
+            )
+            
+            self.producer_rechazado = self.cliente_pulsar.create_producer(
+                'contrato-rechazado', 
+                schema=pulsar.schema.AvroSchema(ContratoRechazado)
+            )
+            
+            logger.info("✅ Cliente Pulsar inicializado para eventos de saga")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudo conectar a Pulsar: {e}")
+            self.cliente_pulsar = None
+
     def handle(self, comando: ProcesarComplianceContrato):
+        resultado_validacion = None
+        causa_rechazo = None
+        validacion_fallida = None
+        
         try:
             logger.info(f"💼 Procesando compliance para partner {comando.partner_id}, contrato {comando.contrato_id}")
             
             # 1. Validar compliance del contrato
-            self._validar_compliance(comando)
+            resultado_validacion = self._validar_compliance(comando)
             
             # 2. Crear instancia del repositorio de infraestructura
             repositorio = RepositorioPaymentPostgress()
@@ -52,9 +116,108 @@ class ProcesarComplianceContratoHandler(ComandoBaseHandler):
             
             logger.info(f"✅ Compliance procesado exitosamente para partner {comando.partner_id}")
             
+            # 5. Publicar evento de contrato aprobado
+            self._publicar_contrato_aprobado(comando)
+            
+        except ValueError as e:
+            # Error de validación
+            causa_rechazo = str(e)
+            validacion_fallida = self._identificar_validacion_fallida(str(e))
+            logger.error(f"❌ Validación fallida: {e}")
+            
+            # Publicar evento de contrato rechazado
+            self._publicar_contrato_rechazado(comando, causa_rechazo, validacion_fallida)
+            
         except Exception as e:
-            logger.error(f"❌ Error procesando compliance: {e}")
-            raise
+            # Error técnico
+            causa_rechazo = f"Error técnico en procesamiento: {str(e)}"
+            validacion_fallida = "ERROR_TECNICO"
+            logger.error(f"❌ Error técnico procesando compliance: {e}")
+            
+            # Publicar evento de contrato rechazado
+            self._publicar_contrato_rechazado(comando, causa_rechazo, validacion_fallida)
+            
+        finally:
+            self._cerrar_conexiones()
+
+    def _publicar_contrato_aprobado(self, comando: ProcesarComplianceContrato):
+        """Publica evento de contrato aprobado para continuar la saga"""
+        if not self.producer_aprobado:
+            logger.warning("⚠️ Producer no disponible para contrato-aprobado")
+            return
+            
+        try:
+            evento = ContratoAprobado(
+                partner_id=comando.partner_id,
+                contrato_id=comando.contrato_id,
+                monto=comando.monto,
+                moneda=comando.moneda,
+                estado=comando.estado,
+                tipo=comando.tipo or "STANDARD",
+                fecha_aprobacion=datetime.now().isoformat(),
+                validaciones_pasadas=[
+                    "monto_y_limites",
+                    "moneda_y_jurisdiccion", 
+                    "partner_y_reputacion",
+                    "estado_y_vigencia"
+                ]
+            )
+            
+            self.producer_aprobado.send(evento)
+            logger.info(f"📢 Evento ContratoAprobado publicado para contrato {comando.contrato_id}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error publicando evento aprobado: {e}")
+
+    def _publicar_contrato_rechazado(self, comando: ProcesarComplianceContrato, causa_rechazo: str, validacion_fallida: str):
+        """Publica evento de contrato rechazado para terminar la saga"""
+        if not self.producer_rechazado:
+            logger.warning("⚠️ Producer no disponible para contrato-rechazado")
+            return
+            
+        try:
+            evento = ContratoRechazado(
+                partner_id=comando.partner_id,
+                contrato_id=comando.contrato_id,
+                monto=comando.monto,
+                moneda=comando.moneda,
+                estado=comando.estado,
+                tipo=comando.tipo or "STANDARD",
+                fecha_rechazo=datetime.now().isoformat(),
+                causa_rechazo=causa_rechazo,
+                validacion_fallida=validacion_fallida
+            )
+            
+            self.producer_rechazado.send(evento)
+            logger.info(f"📢 Evento ContratoRechazado publicado para contrato {comando.contrato_id}: {causa_rechazo}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error publicando evento rechazado: {e}")
+
+    def _identificar_validacion_fallida(self, mensaje_error: str) -> str:
+        """Identifica qué validación específica falló"""
+        if "monto" in mensaje_error.lower() or "límite" in mensaje_error.lower():
+            return "MONTO_INVALIDO"
+        elif "moneda" in mensaje_error.lower():
+            return "MONEDA_NO_PERMITIDA"
+        elif "partner" in mensaje_error.lower():
+            return "PARTNER_INVALIDO"
+        elif "estado" in mensaje_error.lower():
+            return "ESTADO_INVALIDO"
+        else:
+            return "VALIDACION_GENERAL"
+
+    def _cerrar_conexiones(self):
+        """Cierra las conexiones de Pulsar"""
+        try:
+            if self.producer_aprobado:
+                self.producer_aprobado.close()
+            if self.producer_rechazado:
+                self.producer_rechazado.close()
+            if self.cliente_pulsar:
+                self.cliente_pulsar.close()
+        except Exception as e:
+            logger.warning(f"⚠️ Error cerrando conexiones Pulsar: {e}")
 
     def _validar_compliance(self, comando: ProcesarComplianceContrato):
         self._validar_monto_y_limites(comando.monto, comando.contrato_id, comando.tipo)

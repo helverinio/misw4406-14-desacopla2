@@ -211,8 +211,6 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         logger.info(f"🎯 [CHOREOGRAPHY] CreatePartner received for: {evento.partner_id}")
         logger.info(f"⏭️  Next expected: PartnerCreated or PartnerCreationFailed")
         
-        # En coreografía, este evento desencadenaría la creación del partner
-        # en el servicio correspondiente, pero aquí solo lo registramos
 
     def _procesar_partner_created(self, evento: PartnerCreated):
         """
@@ -220,9 +218,6 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         """
         logger.info(f"✅ [CHOREOGRAPHY] PartnerCreated received for: {evento.partner_id}")
         logger.info(f"⏭️  Next expected: ContratoCreado or ContratoCreadoFailed")
-        
-        # En coreografía, este evento desencadenaría la creación del contrato
-        # en el servicio de contratos
 
     def _procesar_partner_creation_failed(self, evento: PartnerCreationFailed):
         """

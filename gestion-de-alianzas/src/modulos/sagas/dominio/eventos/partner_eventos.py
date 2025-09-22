@@ -20,7 +20,6 @@ class CreatePartner(EventoDominio):
     partner_id: str = ""
 
     def __post_init__(self):
-        # Inicializar el ID del evento padre
         self._id = self.siguiente_id()
 
 
