@@ -73,18 +73,18 @@ class ProcesarComplianceContratoHandler(ComandoBaseHandler):
             broker_url = os.getenv('BROKER_URL', 'pulsar://broker:6650')
             self.cliente_pulsar = pulsar.Client(broker_url)
             
-            # Crear productores para los eventos de saga
+            # Crear productores para los eventos de saga usando JSON en lugar de Avro
             self.producer_aprobado = self.cliente_pulsar.create_producer(
                 'contrato-aprobado',
-                schema=pulsar.schema.AvroSchema(ContratoAprobado)
+                schema=pulsar.schema.StringSchema()  # Cambiar a JSON string
             )
             
             self.producer_rechazado = self.cliente_pulsar.create_producer(
                 'contrato-rechazado', 
-                schema=pulsar.schema.AvroSchema(ContratoRechazado)
+                schema=pulsar.schema.StringSchema()  # Cambiar a JSON string
             )
             
-            logger.info("✅ Cliente Pulsar inicializado para eventos de saga")
+            logger.info("✅ Cliente Pulsar inicializado para eventos de saga (JSON)")
             
         except Exception as e:
             logger.warning(f"⚠️ No se pudo conectar a Pulsar: {e}")
@@ -147,24 +147,28 @@ class ProcesarComplianceContratoHandler(ComandoBaseHandler):
             return
             
         try:
-            evento = ContratoAprobado(
-                partner_id=comando.partner_id,
-                contrato_id=comando.contrato_id,
-                monto=comando.monto,
-                moneda=comando.moneda,
-                estado=comando.estado,
-                tipo=comando.tipo or "STANDARD",
-                fecha_aprobacion=datetime.now().isoformat(),
-                validaciones_pasadas=[
+            # Crear el evento como diccionario JSON en lugar de objeto Avro
+            evento_data = {
+                "partner_id": comando.partner_id,
+                "contrato_id": comando.contrato_id,
+                "monto": comando.monto,
+                "moneda": comando.moneda,
+                "estado": comando.estado,
+                "tipo": comando.tipo or "STANDARD",
+                "fecha_aprobacion": datetime.now().isoformat(),
+                "validaciones_pasadas": [
                     "monto_y_limites",
                     "moneda_y_jurisdiccion", 
                     "partner_y_reputacion",
                     "estado_y_vigencia"
                 ]
-            )
+            }
             
-            self.producer_aprobado.send(evento)
-            logger.info(f"📢 Evento ContratoAprobado publicado para contrato {comando.contrato_id}")
+            # Enviar como JSON string
+            evento_json = json.dumps(evento_data)
+            self.producer_aprobado.send(evento_json)
+            logger.info(f"📢 Evento ContratoAprobado (JSON) publicado para contrato {comando.contrato_id}")
+            logger.info(f"📋 Datos enviados: {evento_json}")
             
         except Exception as e:
             logger.error(f"❌ Error publicando evento aprobado: {e}")
@@ -176,20 +180,24 @@ class ProcesarComplianceContratoHandler(ComandoBaseHandler):
             return
             
         try:
-            evento = ContratoRechazado(
-                partner_id=comando.partner_id,
-                contrato_id=comando.contrato_id,
-                monto=comando.monto,
-                moneda=comando.moneda,
-                estado=comando.estado,
-                tipo=comando.tipo or "STANDARD",
-                fecha_rechazo=datetime.now().isoformat(),
-                causa_rechazo=causa_rechazo,
-                validacion_fallida=validacion_fallida
-            )
+            # Crear el evento como diccionario JSON en lugar de objeto Avro
+            evento_data = {
+                "partner_id": comando.partner_id,
+                "contrato_id": comando.contrato_id,
+                "monto": comando.monto,
+                "moneda": comando.moneda,
+                "estado": comando.estado,
+                "tipo": comando.tipo or "STANDARD",
+                "fecha_rechazo": datetime.now().isoformat(),
+                "causa_rechazo": causa_rechazo,
+                "validacion_fallida": validacion_fallida
+            }
             
-            self.producer_rechazado.send(evento)
-            logger.info(f"📢 Evento ContratoRechazado publicado para contrato {comando.contrato_id}: {causa_rechazo}")
+            # Enviar como JSON string
+            evento_json = json.dumps(evento_data)
+            self.producer_rechazado.send(evento_json)
+            logger.info(f"📢 Evento ContratoRechazado (JSON) publicado para contrato {comando.contrato_id}: {causa_rechazo}")
+            logger.info(f"📋 Datos enviados: {evento_json}")
             
         except Exception as e:
             logger.error(f"❌ Error publicando evento rechazado: {e}")

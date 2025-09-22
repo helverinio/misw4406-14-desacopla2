@@ -324,6 +324,9 @@ class PartnerCreado:
 
 #### Activar Infraestructura
 
+  ### Crear red para los servicios
+  docker network create misw4406-14-desacopla2_default
+
   ##### Iniciar Apache Pulsar
   docker-compose -f docker-compose.pulsar.yml up
 

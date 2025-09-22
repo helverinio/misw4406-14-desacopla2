@@ -15,48 +15,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
 from modulos.sagas.dominio.eventos import (
     CreatePartner, PartnerCreated, PartnerCreationFailed,
-    ContratoCreado, ContratoCreadoFailed
+    ContratoCreado, ContratoCreadoFailed,
+    ContratoAprobado, ContratoRechazado, RevisionContrato
 )
 from modulos.sagas.aplicacion.coordinadores.saga_partners import CoordinadorPartnersCoreografico
-
-# Nuevos eventos de compliance
-from dataclasses import dataclass
-
-@dataclass
-class ContratoAprobado:
-    partner_id: str
-    contrato_id: str
-    monto: float
-    moneda: str
-    estado: str
-    tipo: str
-    fecha_aprobacion: str
-    validaciones_pasadas: list
-
-@dataclass
-class ContratoRechazado:
-    partner_id: str
-    contrato_id: str
-    monto: float
-    moneda: str
-    estado: str
-    tipo: str
-    fecha_rechazo: str
-    causa_rechazo: str
-    validacion_fallida: str
-
-@dataclass
-class RevisionContrato:
-    partner_id: str
-    contrato_id: str
-    monto: float
-    moneda: str
-    estado: str
-    tipo: str
-    fecha_revision: str
-    causa_rechazo_original: str
-    validacion_fallida: str
-    requiere_revision_manual: bool = True
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -93,19 +55,12 @@ class PulsarSagaChoreographyListener:
             self.client = pulsar.Client(self.pulsar_url)
             
             for topic, event_type in self.topics.items():
-                # Usar esquema específico para eventos de compliance
-                if topic in ['contrato-aprobado', 'contrato-rechazado']:
-                    consumer = self.client.subscribe(
-                        topic,
-                        subscription_name=f"{self.subscription_prefix}-{topic}",
-                        schema=pulsar.schema.BytesSchema()  # Mantener BytesSchema para flexibilidad
-                    )
-                else:
-                    consumer = self.client.subscribe(
-                        topic,
-                        subscription_name=f"{self.subscription_prefix}-{topic}",
-                        schema=pulsar.schema.BytesSchema()
-                    )
+                # Usar BytesSchema para compatibilidad con sistemas existentes
+                consumer = self.client.subscribe(
+                    topic,
+                    subscription_name=f"{self.subscription_prefix}-{topic}",
+                    schema=pulsar.schema.BytesSchema()  # Bytes schema para compatibilidad
+                )
                 self.consumers[topic] = consumer
                 logger.info(f"✅ Subscribed to topic: {topic} for event: {event_type.__name__}")
             
@@ -126,30 +81,24 @@ class PulsarSagaChoreographyListener:
         Procesa el mensaje recibido de Pulsar y lo convierte en evento de dominio
         """
         try:
-            # Intentar decodificar el mensaje - puede ser texto plano o Avro
-            content = None
-            
+            # Intentar decodificar como UTF-8 (para JSON del compliance)
             try:
-                # Primero intentar como UTF-8 (texto plano/JSON)
                 content = msg_data.decode('utf-8')
-                logger.info(f"📨 Received TEXT message from topic {topic}: {content}")
+                # Verificar si es JSON válido
+                if content.strip().startswith('{') and content.strip().endswith('}'):
+                    logger.info(f"📨 Received JSON message from topic {topic}: {content}")
+                else:
+                    logger.info(f"📨 Received TEXT message from topic {topic}: {content}")
             except UnicodeDecodeError:
-                # Si falla, es probablemente Avro binario
-                logger.info(f"📨 Received BINARY message from topic {topic}, attempting Avro decode")
-                try:
-                    # Para mensajes Avro, intentar parsear directamente como JSON si es posible
-                    # O manejar como binario y usar información del contexto
-                    content = self._handle_avro_message(topic, msg_data)
-                except Exception as avro_error:
-                    logger.error(f"❌ Failed to decode Avro message: {avro_error}")
-                    raise
+                logger.error(f"❌ Failed to decode message as UTF-8 from topic {topic}")
+                raise
             
             if not content:
                 raise ValueError(f"No se pudo decodificar mensaje del topic {topic}")
             
             evento = None
-            if topic == 'CreatePartner':
-                logger.info(f"📨 Logging CreatePartner event from content: {content}")
+            if topic == 'comando-crear-partner':
+                evento = self._process_create_partner_message(content)
             elif topic == 'PartnerCreado':
                 evento = self._process_partner_created_message(content)
             elif topic == 'ContratoCreado':
@@ -168,83 +117,11 @@ class PulsarSagaChoreographyListener:
         except Exception as e:
             logger.error(f"❌ Error processing message from topic {topic}: {e}")
             raise
+
+
     
-    def _handle_avro_message(self, topic: str, msg_data: bytes) -> str:
-        """
-        Maneja mensajes Avro binarios convirtiéndolos a JSON
-        """
-        try:
-            # Para eventos de compliance, crear un mensaje JSON simulado
-            # basado en la estructura esperada
-            if topic == 'contrato-aprobado':
-                # Crear evento de prueba para contrato aprobado
-                evento_json = {
-                    "partner_id": "unknown-partner",
-                    "contrato_id": "unknown-contract", 
-                    "monto": 1000.0,
-                    "moneda": "USD",
-                    "estado": "APROBADO",
-                    "tipo": "STANDARD",
-                    "fecha_aprobacion": datetime.now().isoformat(),
-                    "validaciones_pasadas": ["all_validations_passed"]
-                }
-                logger.info(f"🔄 Created mock approval event from Avro binary")
-                return json.dumps(evento_json)
-                
-            elif topic == 'contrato-rechazado':
-                # Crear evento de prueba para contrato rechazado
-                evento_json = {
-                    "partner_id": "unknown-partner",
-                    "contrato_id": "unknown-contract",
-                    "monto": 1000.0,
-                    "moneda": "USD", 
-                    "estado": "RECHAZADO",
-                    "tipo": "STANDARD",
-                    "fecha_rechazo": datetime.now().isoformat(),
-                    "causa_rechazo": "Validation failed",
-                    "validacion_fallida": "DECODED_FROM_AVRO"
-                }
-                logger.info(f"🔄 Created mock rejection event from Avro binary")
-                return json.dumps(evento_json)
-            
-            # Para otros topics, intentar extraer información básica
-            logger.warning(f"⚠️ Avro message for unsupported topic {topic}, using basic extraction")
-            return f'{{"message": "avro_binary_data", "topic": "{topic}"}}'
-            
-        except Exception as e:
-            logger.error(f"❌ Error handling Avro message: {e}")
-            raise
-    
-    def process_message_from_content(self, topic: str, content: str):
-        """
-        Procesa un mensaje que ya está en formato de string/JSON
-        """
-        try:
-            logger.info(f"📨 Processing content from topic {topic}: {content}")
-            
-            evento = None
-            
-            if topic == 'PartnerCreado':
-                evento = self._process_partner_created_message(content)
-            elif topic == 'ContratoCreado':
-                evento = self._process_contrato_creado_message(content)
-            elif topic == 'contrato-aprobado':
-                evento = self._process_contrato_aprobado_message(content)
-            elif topic == 'contrato-rechazado':
-                evento = self._process_contrato_rechazado_message(content)
-            
-            if evento:
-                logger.info(f"✨ Created event: {type(evento).__name__} for partner_id: {evento.partner_id}")
-                return evento
-            else:
-                raise ValueError(f"No se pudo crear evento para topic {topic} con contenido: {content}")
-                
-        except Exception as e:
-            logger.error(f"❌ Error processing content from topic {topic}: {e}")
-            raise
-    
-    def _process_partner_created_message(self, content: str) -> CreatePartner:
-        """Procesa mensajes del topic PartnerCreado y crea eventos CreatePartner"""
+    def _process_create_partner_message(self, content: str) -> CreatePartner:
+        """Procesa mensajes del topic comando-crear-partner y crea eventos CreatePartner"""
         try:
             # Intentar parsear como JSON
             try:
@@ -268,7 +145,40 @@ class PulsarSagaChoreographyListener:
             if not partner_id:
                 raise ValueError(f"No se pudo extraer partner_id del mensaje: {content}")
             
+            logger.info(f"✅ Created CreatePartner event for partner_id: {partner_id}")
             return CreatePartner(partner_id=partner_id)
+            
+        except Exception as e:
+            logger.error(f"❌ Error processing CreatePartner message: {e}")
+            raise
+
+    def _process_partner_created_message(self, content: str) -> PartnerCreated:
+        """Procesa mensajes del topic PartnerCreado y crea eventos PartnerCreated"""
+        try:
+            # Intentar parsear como JSON
+            try:
+                data = json.loads(content)
+                partner_id = data.get("partner_id")
+                if not partner_id:
+                    partner_id = str(data)
+            except json.JSONDecodeError:
+                # Si no es JSON válido, limpiar el contenido
+                clean_content = ''.join(char for char in content if char.isprintable())
+                logger.info(f'📥 Cleaned content: {clean_content}')
+                
+                # Manejar el prefijo 'H' como en el consumer existente
+                if clean_content and clean_content[0] == 'H':
+                    partner_id = clean_content[1:]  # Remover el prefijo 'H'
+                    logger.info(f'📥 Extracted partner_id from prefixed message: {partner_id}')
+                else:
+                    partner_id = clean_content
+                    logger.info(f'📥 Using content as partner_id: {partner_id}')
+            
+            if not partner_id:
+                raise ValueError(f"No se pudo extraer partner_id del mensaje: {content}")
+            
+            logger.info(f"✅ Created PartnerCreated event for partner_id: {partner_id}")
+            return PartnerCreated(partner_id=partner_id)
             
         except Exception as e:
             logger.error(f"❌ Error processing PartnerCreado message: {e}")
@@ -352,26 +262,7 @@ class PulsarSagaChoreographyListener:
                 
                 try:
                     # Procesar el mensaje y crear evento de dominio
-                    if topic in ['contrato-aprobado', 'contrato-rechazado']:
-                        # Para mensajes de compliance, usar el value() del mensaje directamente
-                        try:
-                            evento_data = msg.value()  # Esto debería funcionar con Avro
-                            if isinstance(evento_data, dict):
-                                # Ya es un dict, convertir a JSON string
-                                content = json.dumps(evento_data)
-                            else:
-                                # Es un objeto Avro, convertir a dict primero
-                                content = json.dumps(evento_data.__dict__ if hasattr(evento_data, '__dict__') else str(evento_data))
-                            
-                            logger.info(f"📨 Processed Avro message from {topic}: {content}")
-                            evento = self.process_message_from_content(topic, content)
-                            
-                        except Exception as avro_error:
-                            logger.warning(f"⚠️ Failed to get value() from Avro message, using fallback: {avro_error}")
-                            evento = self.process_message(topic, msg.data())
-                    else:
-                        # Para otros mensajes, usar el método original
-                        evento = self.process_message(topic, msg.data())
+                    evento = self.process_message(topic, msg.data())
                     
                     # Manejar eventos de compliance con lógica específica
                     if isinstance(evento, ContratoAprobado):

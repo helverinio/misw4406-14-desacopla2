@@ -274,7 +274,7 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         """
         logger.error(f"❌ [CHOREOGRAPHY] ContratoRechazado for partner: {evento.partner_id}")
         logger.error(f"📄 Contract ID: {evento.contrato_id}")
-        logger.error(f"🔍 Compliance rejection reason: {evento.razon_rechazo}")
+        logger.error(f"🔍 Compliance rejection reason: {evento.causa_rechazo}")
         logger.info("🔚 Saga terminates due to compliance rejection")
         
         self.terminar(evento.partner_id, exitoso=False)
