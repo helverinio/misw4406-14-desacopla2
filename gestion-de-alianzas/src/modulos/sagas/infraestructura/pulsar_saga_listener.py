@@ -25,10 +25,6 @@ from modulos.sagas.aplicacion.coordinadores.saga_partners import CoordinadorPart
 logger = logging.getLogger(__name__)
 
 class PulsarSagaChoreographyListener:
-    """
-    Listener que escucha múltiples eventos desde Pulsar para la saga coreográfica
-    Escucha: CreatePartner, PartnerCreated, PartnerCreationFailed, ContratoCreado, ContratoCreadoFailed
-    """
     
     def __init__(self, pulsar_url: str = None):
         self.pulsar_url = pulsar_url or os.getenv('BROKER_URL', 'pulsar://localhost:6650')
@@ -164,7 +160,6 @@ class PulsarSagaChoreographyListener:
             if not partner_id:
                 raise ValueError(f"No se pudo extraer partner_id del mensaje: {content[:100]}...")
             
-            # Si es demasiado largo, probablemente sea malformado
             if len(partner_id) > 200:
                 logger.warning(f"⚠️ Partner ID muy largo ({len(partner_id)} chars), posiblemente malformado")
                 # Intentar extraer UUID
@@ -173,7 +168,6 @@ class PulsarSagaChoreographyListener:
                     logger.info(f"✅ Extracted UUID from long content: {extracted_id}")
                     return extracted_id
                 else:
-                    # Usar los primeros 50 caracteres como fallback
                     partner_id = partner_id[:50]
                     logger.warning(f"⚠️ Using truncated partner_id: {partner_id}")
             
@@ -194,11 +188,9 @@ class PulsarSagaChoreographyListener:
         if re.match(uuid_pattern, partner_id, re.IGNORECASE):
             return True
         
-        # Verificar si es un ID corto (alfanumérico, menos de 50 chars, sin espacios)
         if len(partner_id) < 50 and partner_id.replace('-', '').replace('_', '').isalnum():
             return True
-        
-        # Si contiene símbolos de email, teléfono o direcciones, probablemente es malformado
+
         if any(char in partner_id for char in ['@', '+', ',', ' ']):
             return False
         
@@ -222,8 +214,6 @@ class PulsarSagaChoreographyListener:
     def _process_create_partner_message(self, content: str) -> CreatePartner:
         """Procesa mensajes del topic comando-crear-partner y crea eventos CreatePartner"""
         try:
-            # Para CreatePartner, generamos un ID temporal ya que el partner aún no existe
-            # El contenido contiene los datos del formulario para crear el partner
             temp_partner_id = f"temp-{str(uuid.uuid4())[:8]}"
             
             logger.info(f"📝 CreatePartner received with form data: {content[:100]}...")
@@ -438,7 +428,6 @@ class PulsarSagaChoreographyListener:
                 logger.warning("⚠️ Producer de revisión no disponible")
             
             # Finalizar la saga con fallo solo si no requiere revisión manual
-            # La revisión manual puede llevar a aprobación posterior
             logger.info(f"🔄 Saga en estado de revisión pendiente para partner {evento.partner_id}")
             logger.info(f"📝 Se publicará evento RevisionContrato para revisión manual")
             
@@ -456,9 +445,6 @@ class PulsarSagaChoreographyListener:
             
             # Procesar en la saga para registrar la revisión
             self.coordinador.procesar_evento(evento)
-            
-            # Nota: La saga NO termina aquí, queda en estado de revisión pendiente
-            # esperando un nuevo ContratoAprobado o ContratoRechazado después de la revisión
             logger.info(f"⏳ Saga mantiene estado de revisión pendiente para partner {evento.partner_id}")
             logger.info(f"📝 Esperando resolución de revisión manual...")
             

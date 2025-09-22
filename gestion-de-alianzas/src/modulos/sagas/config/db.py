@@ -6,10 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
 
-# ✅ Base declarativa para nuestras tablas de saga
 SagaBase = declarative_base()
 
-# ✅ Configuración de conexión desde variables de entorno
 DATABASE_URL = os.getenv(
     'DATABASE_URL_SYNC',
     f"postgresql://{os.getenv('POSTGRES_USER', 'postgres_user')}:"
@@ -19,7 +17,6 @@ DATABASE_URL = os.getenv(
     f"{os.getenv('POSTGRES_DB', 'gestion_alianzas')}"
 )
 
-# ✅ Motor de base de datos
 engine = create_engine(
     DATABASE_URL,
     echo=False,  # Cambiar a True para debug SQL
@@ -27,7 +24,6 @@ engine = create_engine(
     pool_recycle=300
 )
 
-# ✅ Factory de sesiones
 SagaSessionFactory = sessionmaker(
     bind=engine,
     autocommit=False,

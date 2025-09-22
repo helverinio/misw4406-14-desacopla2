@@ -11,7 +11,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@loc
 engine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
-    echo=False,  # pon True si quieres ver SQL en consola
+    echo=False,
 )
 
 SessionFactory = async_sessionmaker(

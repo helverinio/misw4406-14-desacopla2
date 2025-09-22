@@ -31,9 +31,8 @@ logger = logging.getLogger(__name__)
 class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
 
     def __init__(self, saga_log_service=None):
-        self.estado_saga = {}  # Para trackear el estado de cada saga por partner_id
+        self.estado_saga = {} 
         
-        # Crear servicio de logging directamente si no se proporciona
         if saga_log_service is None:
             try:
                 repository = SagaLogRepository()
@@ -123,47 +122,30 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
                 logger.error(f"❌ Error registrando finalización de saga: {e}")
 
     def persistir_en_saga_log(self, mensaje):
-        """
-        Persiste el estado de la saga en logs
-        TODO: Implementar persistencia en base de datos
-        """
         logger.info(f"📝 Choreography log: {mensaje}")
 
     def construir_comando(self, evento: EventoDominio, tipo_comando: type):
-        """
-        En coreografía, cada servicio maneja sus propios comandos
-        """
         logger.info(f"🔄 Event received in choreography: {type(evento).__name__}")
         return None
 
     def puede_procesar_evento(self, evento_anterior: type, evento_actual: type) -> bool:
-        """
-        Verifica si un evento puede seguir a otro según las reglas de coreografía
-        """
         if evento_anterior is None:
             return isinstance(evento_actual, type) and evento_actual == CreatePartner
         
         return evento_actual in self.reglas_coreografia.get(evento_anterior, [])
 
     def procesar_evento(self, evento: EventoDominio):
-        """
-        Procesa eventos en la saga coreográfica
-        Cada evento desencadena acciones específicas sin coordinación central
-        """
         logger.info(f"📨 Processing choreographic event: {type(evento).__name__}")
         
         try:
             partner_id = getattr(evento, 'partner_id', 'unknown')
-            
-            # Manejar eventos especiales que no requieren saga iniciada
+
             if isinstance(evento, CreatePartner):
-                # CreatePartner solo se loggea, NO inicia la saga
                 logger.info(f"📝 CreatePartner recibido - solo logging: {partner_id}")
                 self._log_evento_sin_saga(evento)
                 self._procesar_evento_interno(evento)
                 return
             
-            # Solo iniciar la saga si es el evento PartnerCreated
             if partner_id not in self.estado_saga:
                 if isinstance(evento, PartnerCreated):
                     self.iniciar(partner_id)  # Usar el ID real del partner creado
@@ -175,14 +157,12 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
             # Registrar evento en el saga log si el servicio está disponible
             if self.saga_log_service and saga_id:
                 try:
-                    # Convertir evento a dict para serializar
                     evento_data = {
-                        'partner_id': partner_id,  # Usar el partner_id
+                        'partner_id': partner_id, 
                         'evento_tipo': type(evento).__name__,
                         'timestamp': str(getattr(evento, 'fecha_evento', 'N/A'))
                     }
                     
-                    # Agregar campos específicos según el tipo de evento
                     if hasattr(evento, 'contrato_id'):
                         evento_data['contrato_id'] = getattr(evento, 'contrato_id', None)
                     if hasattr(evento, 'monto'):
@@ -237,27 +217,16 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
             logger.warning(f"⚠️  Unknown event type in choreographic saga: {type(evento).__name__}")
 
     def _procesar_create_partner(self, evento: CreatePartner):
-        """
-        Procesa evento CreatePartner - solo logging, NO inicia saga
-        La saga se iniciará cuando llegue PartnerCreated
-        """
         logger.info(f"📝 [CHOREOGRAPHY] CreatePartner received: {evento.partner_id}")
         logger.info(f"📄 Partner data: {evento.partner_id}")
         logger.info(f"⏭️ Waiting for PartnerCreated to start saga")
         
 
     def _procesar_partner_created(self, evento: PartnerCreated):
-        """
-        Procesa evento PartnerCreated - partner creado exitosamente
-        En este punto la saga ya fue iniciada por este mismo evento
-        """
         logger.info(f"✅ [CHOREOGRAPHY] PartnerCreated received for: {evento.partner_id}")
         logger.info(f"⏭️  Next expected: ContratoCreado or ContratoCreadoFailed")
 
     def _procesar_partner_creation_failed(self, evento: PartnerCreationFailed):
-        """
-        Procesa evento PartnerCreationFailed - falló la creación del partner
-        """
         logger.error(f"❌ [CHOREOGRAPHY] PartnerCreationFailed for: {evento.partner_id}")
         logger.error(f"🚫 Error: {evento.error_message}")
         logger.info("🔚 Saga terminates due to partner creation failure")
@@ -265,18 +234,11 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         self.terminar(evento.partner_id, exitoso=False)
 
     def _procesar_contrato_creado(self, evento: ContratoCreado):
-        """
-        Procesa evento ContratoCreado - contrato creado exitosamente
-        Ahora pasa a compliance para validación
-        """
         logger.info(f"✅ [CHOREOGRAPHY] ContratoCreado received for partner: {evento.partner_id}")
         logger.info(f"📄 Contract ID: {evento.contrato_id}, Amount: {evento.monto} {evento.moneda}")
         logger.info("⏭️  Next expected: ContratoAprobado or ContratoRechazado (from compliance)")
 
     def _procesar_contrato_creado_failed(self, evento: ContratoCreadoFailed):
-        """
-        Procesa evento ContratoCreadoFailed - falló la creación del contrato
-        """
         logger.error(f"❌ [CHOREOGRAPHY] ContratoCreadoFailed for partner: {evento.partner_id}")
         logger.error(f"📄 Contract ID: {evento.contrato_id}")
         logger.error(f"� Error: {evento.error_message}")
@@ -285,9 +247,6 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         self.terminar(evento.partner_id, exitoso=False)
 
     def _procesar_contrato_aprobado(self, evento: ContratoAprobado):
-        """
-        Procesa evento ContratoAprobado - contrato aprobado por compliance
-        """
         logger.info(f"✅ [CHOREOGRAPHY] ContratoAprobado received for partner: {evento.partner_id}")
         logger.info(f"📄 Contract ID: {evento.contrato_id}")
         logger.info(f"🔍 Compliance validation passed")
@@ -296,9 +255,6 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         self.terminar(evento.partner_id, exitoso=True)
 
     def _procesar_contrato_rechazado(self, evento: ContratoRechazado):
-        """
-        Procesa evento ContratoRechazado - contrato rechazado por compliance
-        """
         logger.error(f"❌ [CHOREOGRAPHY] ContratoRechazado for partner: {evento.partner_id}")
         logger.error(f"📄 Contract ID: {evento.contrato_id}")
         logger.error(f"🔍 Compliance rejection reason: {evento.causa_rechazo}")
@@ -307,24 +263,15 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         self.terminar(evento.partner_id, exitoso=False)
 
     def _procesar_revision_contrato(self, evento: RevisionContrato):
-        """
-        Procesa evento RevisionContrato - contrato necesita revisión
-        """
         logger.warning(f"⚠️ [CHOREOGRAPHY] RevisionContrato for partner: {evento.partner_id}")
         logger.warning(f"📄 Contract ID: {evento.contrato_id}")
         logger.warning(f"🔍 Revision required: {evento.comentarios_revision}")
         logger.info("⏭️ Next expected: ContratoAprobado or ContratoRechazado (after revision)")
 
     def obtener_estado_saga(self, partner_id: str) -> dict:
-        """
-        Obtiene el estado actual de la saga para un partner
-        """
         return self.estado_saga.get(partner_id, {})
     
     def obtener_historial_saga(self, partner_id: str) -> list:
-        """
-        Obtiene el historial completo de eventos de una saga
-        """
         if not self.saga_log_service:
             return []
         
@@ -336,9 +283,6 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         return []
 
     def _log_evento_sin_saga(self, evento: EventoDominio):
-        """
-        Registra eventos que no requieren saga iniciada (como CreatePartner)
-        """
         if self.saga_log_service:
             try:
                 # Generar un ID único para este evento sin saga
@@ -361,16 +305,10 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
             except Exception as e:
                 logger.error(f"❌ Error registrando evento sin saga en BD: {e}")
 
-
-# Listener function para redireccionar eventos de dominio
 def oir_mensaje(mensaje, saga_log_service=None):
-    """
-    Función listener que redirige eventos de dominio a la saga coreográfica
-    """
     logger.info(f"👂 Received choreographic message: {type(mensaje).__name__}")
     
     if isinstance(mensaje, EventoDominio):
-        # Crear coordinador 
         coordinador = CoordinadorPartnersCoreografico(saga_log_service)
         coordinador.procesar_evento(mensaje)
     else:

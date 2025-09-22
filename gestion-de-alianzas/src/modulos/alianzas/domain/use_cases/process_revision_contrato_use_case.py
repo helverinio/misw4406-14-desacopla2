@@ -16,12 +16,6 @@ class ProcessRevisionContratoUseCase(BaseUseCase):
         self.contrato_repository = contrato_repository
 
     async def execute(self, partner_id: str, comentarios_revision: str = None) -> Optional[Contrato]:
-        """
-        Procesa el evento revision-contrato:
-        1. Busca el contrato por partner_id
-        2. Actualiza el estado a RECHAZADO
-        3. Guarda los comentarios de revisión si están disponibles
-        """
         try:
             logger.info(f"🔄 Processing revision-contrato for partner: {partner_id}")
             
@@ -35,10 +29,8 @@ class ProcessRevisionContratoUseCase(BaseUseCase):
             logger.info(f"📄 Found contrato: {contrato.id} for partner: {partner_id}")
             logger.info(f"📊 Current estado: {contrato.estado}")
             
-            # Actualizar el estado a RECHAZADO
             contrato.estado = EstadoContrato.RECHAZADO
             
-            # Si hay comentarios de revisión, agregarlos a las condiciones
             if comentarios_revision:
                 revision_note = f"REVISION: {comentarios_revision}"
                 if contrato.condiciones:

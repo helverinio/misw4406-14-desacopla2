@@ -212,8 +212,154 @@ POST /partners/validate
    - Docker Compose para cada servicio
    - Configuración de redes y volúmenes
 
+---
 
-## Instalación y Ejecución
+## Implementación de Saga Coreográfica (Entrega 5)
+
+### Descripción General
+
+Se implementó un patrón de **Saga Coreográfica** para gestionar transacciones distribuidas en el flujo de registro de partners y creación de contratos. Este patrón permite mantener la consistencia eventual entre microservicios sin necesidad de un coordinador central.
+
+### Flujo Principal de la Saga
+
+```mermaid
+graph TD
+    A[CreatePartner] --> B[PartnerCreated]
+    B --> C[ContratoCreado]
+    C --> D[ContratoAprobado/ContratoRechazado]
+    D --> E{Estado Final}
+    E -->|Aprobado| F[SAGA_COMPLETADA]
+    E -->|Rechazado| G[RevisionContrato]
+    G --> H[SAGA_PENDIENTE_REVISION]
+```
+
+### Eventos Implementados
+
+#### 1. Eventos Principales
+- **`CreatePartner`**: Inicia el proceso con datos de formulario y ID temporal
+- **`PartnerCreated`**: Partner creado exitosamente
+- **`ContratoCreado`**: Contrato generado automáticamente
+- **`ContratoAprobado`**: Contrato aprobado por compliance
+- **`ContratoRechazado`**: Contrato rechazado por compliance
+
+#### 2. Eventos de Compensación
+- **`PartnerCreationFailed`**: Error en creación de partner
+- **`ContratoCreadoFailed`**: Error en creación de contrato
+- **`RevisionContrato`**: Requiere revisión manual del contrato
+
+### Reglas de Coreografía
+
+El coordinador define las transiciones permitidas entre eventos:
+
+```python
+reglas_coreografia = {
+    CreatePartner: [PartnerCreated, PartnerCreationFailed],
+    PartnerCreated: [ContratoCreado, ContratoCreadoFailed],
+    PartnerCreationFailed: [],  # Fin de saga
+    ContratoCreado: [ContratoAprobado, ContratoRechazado],
+    ContratoCreadoFailed: [],  # Fin de saga
+    ContratoAprobado: [],  # Fin exitoso
+    ContratoRechazado: [RevisionContrato],
+    RevisionContrato: []  # Pendiente de revisión manual
+}
+```
+
+### Sistema de Logging y Seguimiento
+
+#### Base de Datos de Saga
+
+Se implementó un sistema completo de logging para seguimiento de sagas:
+
+#### Información Registrada
+
+Cada evento de la saga registra:
+- **ID de saga**: Identificador único para seguimiento
+- **Tipo de evento**: Nombre del evento procesado
+- **Datos del evento**: Payload completo en formato JSON
+- **Estado**: RECIBIDO, PROCESADO, ERROR
+- **Timestamps**: Momentos de recepción y procesamiento
+- **Partner ID**: Tanto temporal como real para trazabilidad
+
+#### Ejemplo de Log de Saga
+
+```json
+{
+  "saga_id": "98273896-af6f-4a48-ad1c-d4780d63d84f",
+  "tipo_evento": "PartnerCreated",
+  "evento_data": {
+    "partner_id": "dd4e7783-842a-467d-8279-93adde1e1e88",
+    "evento_tipo": "PartnerCreated",
+    "timestamp": "2025-09-22 04:21:22.409921"
+  },
+  "estado_procesamiento": "RECIBIDO"
+}
+```
+
+### Manejo de Estados y Compensaciones
+
+#### Estados de Saga
+- **`INICIADA`**: Saga creada por evento PartnerCreated
+- **`COMPLETADA`**: Flujo exitoso completado
+- **`FALLIDA`**: Error irrecuperable ocurrido
+- **`PENDIENTE_REVISION`**: Requiere intervención manual
+
+#### Compensaciones Implementadas
+
+##### 1. Compensación por Creación de Partner Fallida
+```python
+def _procesar_partner_creation_failed(self, evento):
+    logger.error(f"❌ PartnerCreationFailed for: {evento.partner_id}")
+    logger.error(f"🚫 Error: {evento.error_message}")
+    self.terminar(evento.partner_id, exitoso=False)
+```
+
+##### 2. Compensación por Contrato Rechazado
+```python
+def _procesar_contrato_rechazado(self, evento):
+    logger.error(f"❌ ContratoRechazado for partner: {evento.partner_id}")
+    logger.error(f"🔍 Compliance rejection: {evento.causa_rechazo}")
+    # No termina la saga - permite revisión
+```
+
+##### 3. Revisión Manual de Contratos
+- **Trigger**: Contrato rechazado por compliance
+- **Proceso**: Se envía evento `RevisionContrato` 
+- **Acción**: El módulo de alianzas actualiza estado a `RECHAZADO`
+- **Seguimiento**: Saga queda en estado `PENDIENTE_REVISION`
+
+### Manejo de IDs Temporales vs Reales
+
+
+### Consumer de Revisión de Contratos
+Se implementó un consumer dedicado para manejar eventos de revisión:
+
+```python
+class RevisionContratoConsumer:
+    def listen_sync(self):
+        while True:
+            msg = self.consumer.receive()
+            data = json.loads(msg.data().decode('utf-8'))
+            
+            # Buscar contrato por partner_id
+            contrato = await self.repository.get_by_partner_id(partner_id)
+            
+            # Actualizar estado a RECHAZADO
+            contrato.estado = EstadoContrato.RECHAZADO
+            await self.repository.update(contrato)
+```
+
+### Monitoreo y Observabilidad
+
+#### Logs Estructurados
+```python
+logger.info(f"🚀 Saga iniciada por PartnerCreated para partner: {partner_id}")
+logger.info(f"✅ Revision processed successfully for partner: {partner_id}")
+logger.error(f"❌ Error processing revision-contrato message: {e}")
+```
+
+
+
+## Instalación y Ejecución del ambiente
 
 ### Prerrequisitos
 - Docker y Docker Compose

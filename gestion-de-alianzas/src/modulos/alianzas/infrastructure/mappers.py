@@ -5,7 +5,6 @@ from src.modulos.alianzas.domain.models.contrato import Contrato, TipoContrato, 
 
 def _domain_to_row(c: Contrato) -> ContratoRow:
     return ContratoRow(
-        # id is optional, DB will autogenerate if not provided
         id=uuid.UUID(c.id) if c.id else None,
         partner_id=uuid.UUID(c.partner_id),
         tipo=c.tipo.value if isinstance(c.tipo, TipoContrato) else str(c.tipo),

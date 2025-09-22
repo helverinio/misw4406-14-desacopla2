@@ -60,9 +60,6 @@ class Transaccion(Paso):
     exitosa: bool
 
 class CoordinadorCoreografia(CoordinadorSaga, ABC):
-    # TODO Piense como podemos hacer un Coordinador con coreografía y Sagas
-    # Piense en como se tiene la clase Transaccion, donde se cuenta con un atributo de compensación
-    # ¿Tal vez un manejo de tuplas o diccionarios?
     ...
 
 class CoordinadorOrquestacion(CoordinadorSaga, ABC):

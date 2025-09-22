@@ -85,18 +85,6 @@ class SagaLogService:
         evento_data: Any,
         procesador_callback
     ) -> tuple[bool, Optional[str]]:
-        """
-        Procesa un evento con logging automático.
-        
-        Args:
-            saga_id: ID de la saga
-            tipo_evento: Tipo del evento
-            evento_data: Datos del evento
-            procesador_callback: Función que procesa el evento
-            
-        Returns:
-            tuple[bool, Optional[str]]: (éxito, mensaje_error)
-        """
         # Registrar evento recibido
         saga_log = self.registrar_evento_recibido(saga_id, tipo_evento, evento_data)
         

@@ -129,13 +129,3 @@ class PulsarContratoConsumer:
         if hasattr(self, 'client'):
             self.client.close()
             logger.info("🎧 Pulsar consumer closed")
-
-# Example usage (uncomment to run)
-# db_adapter = ContratoPostgresAdapter()
-# consumer = PulsarContratoConsumer(db_adapter)
-# consumer.listen()
-
-# publisher = PulsarContratoPublisher()
-# contrato = Contrato(...)
-# publisher.publish_contrato(contrato)
-# publisher.close()

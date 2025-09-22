@@ -55,7 +55,6 @@ class RevisionContratoConsumer:
                     logger.info("⏳ Waiting for revision-contrato messages...")
                     
                     try:
-                        # Usar receive sin timeout para bloqueo hasta que llegue un mensaje
                         msg = self.consumer.receive()
                             
                         logger.info(f"📨 Revision-contrato message received, processing...")
