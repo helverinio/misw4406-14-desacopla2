@@ -63,6 +63,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "partners-bff.fullname" . }}-config
                   key: BROKER_URL
+            - name: INTEGRATIONS_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "partners-bff.fullname" . }}-config
+                  key: INTEGRATIONS_API_URL
             {{- range .Values.env }}
             - name: {{ .name }}
               value: {{ .value | quote }}

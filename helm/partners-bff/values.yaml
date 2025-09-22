@@ -80,6 +80,10 @@ affinity: {}
 broker:
   url: "pulsar://pulsar-broker.pulsar.svc.cluster.local:6650"
 
+# Integrations API configuration
+integrations:
+  apiUrl: "http://integrations-service"
+
 # Secrets configuration
 secrets: {}
 
@@ -93,7 +97,7 @@ env:
 # Health check configuration
 healthCheck:
   enabled: true
-  path: /posts/ping
+  path: /ping
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
@@ -102,7 +106,7 @@ healthCheck:
 # Liveness probe configuration
 livenessProbe:
   enabled: true
-  path: /posts/ping
+  path: /ping
   initialDelaySeconds: 60
   periodSeconds: 30
   timeoutSeconds: 5
@@ -111,7 +115,7 @@ livenessProbe:
 # Readiness probe configuration
 readinessProbe:
   enabled: true
-  path: /posts/ping
+  path: /ping
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5

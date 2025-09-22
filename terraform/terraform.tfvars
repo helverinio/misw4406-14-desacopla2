@@ -70,6 +70,11 @@ artifact_registry_repositories = {
     description   = "Docker repository for compliance-service application"
     keep_count    = 5
   }
+  partners_bff = {
+    repository_id = "partners-bff"
+    description   = "Docker repository for partners-bff application"
+    keep_count    = 5
+  }
 }
 
 # Kubernetes configuration (optional)

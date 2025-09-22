@@ -6,3 +6,4 @@ metadata:
     {{- include "partners-bff.labels" . | nindent 4 }}
 data:
   BROKER_URL: {{ .Values.broker.url | quote }}
+  INTEGRATIONS_API_URL: {{ .Values.integrations.apiUrl | quote }}
