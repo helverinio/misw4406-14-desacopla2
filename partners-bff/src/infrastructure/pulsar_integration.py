@@ -5,7 +5,7 @@ import os
 import asyncio
 import random, uuid
 PULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
-TOPIC = 'gestion-de-integraciones'
+TOPIC = 'comando-crear-partner'
 
 # Publisher
 class PulsarContratoPublisher:
@@ -13,6 +13,7 @@ class PulsarContratoPublisher:
         self.client = pulsar.Client(PULSAR_SERVICE_URL)
         self.producer = self.client.create_producer(TOPIC)
 
+    # topico comando-crear-partner
     # def publish_contrato(self, contrato: Contrato):
     #     data = contrato.model_dump() if hasattr(contrato, 'model_dump') else contrato.dict()
     #     print(f'\n\n\nPublishing contrato: {data}\n\n\n')
@@ -22,6 +23,7 @@ class PulsarContratoPublisher:
         self.client.close()
 
 # Consumer
+"""
 class PulsarContratoConsumer:
     def __init__(self):
         self.client = pulsar.Client(PULSAR_SERVICE_URL)
@@ -86,3 +88,4 @@ class PulsarContratoConsumer:
 # contrato = Contrato(...)
 # publisher.publish_contrato(contrato)
 # publisher.close()
+"""

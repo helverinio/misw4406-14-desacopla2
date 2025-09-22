@@ -2,6 +2,9 @@
 from fastapi import APIRouter
 
 from src.application.services import PartnersService
+from src.infrastructure.pulsar_integration import PulsarContratoPublisher
+from fastapi import status
+import json
 
 router = APIRouter(prefix="/v1/partners")
 
@@ -12,21 +15,14 @@ async def list_partners():
 
     return partners
 
-@router.post("/", status_code=201)
+@router.post("/", status_code=202)
 async def create_partner(partner_data: dict):
-    """Create a new partner.
-
-    Args:
-        partner_data (dict): The data of the partner to create.
-        nombre (str): The name of the partner.
-        email (str): The email of the partner.
-        telefono (str, optional): The phone number of the partner.
-        direccion (str, optional): The address of the partner.
-
-    Returns:
-        _type_: _description_
     """
-    service = PartnersService()
-    response, status_code = service.create_partner(partner_data)
-
-    return response, status_code
+    Publish a new partner creation event to Pulsar.
+    """
+    publisher = PulsarContratoPublisher()
+    try:
+        publisher.producer.send(json.dumps(partner_data).encode('utf-8'))
+    finally:
+        publisher.close()
+    return {"message": "Evento de creación de partner publicado"}, status.HTTP_202_ACCEPTED
