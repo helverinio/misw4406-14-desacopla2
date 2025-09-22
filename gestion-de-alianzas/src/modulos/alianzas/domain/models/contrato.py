@@ -5,9 +5,10 @@ from pydantic import BaseModel, Field
 
 class EstadoContrato(str, Enum):
     ACTIVO = "activo"
-    INACTIVO = "inactivo"
+    INACTIVO = "inactivo" 
     VENCIDO = "vencido"
     CANCELADO = "cancelado"
+    RECHAZADO = "rechazado"
 
 class TipoContrato(str, Enum):
     CPA = "CPA"  # Cost per action

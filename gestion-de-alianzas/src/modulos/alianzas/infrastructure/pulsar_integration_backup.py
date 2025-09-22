@@ -1,5 +1,7 @@
 import pulsar
-import json
+impPULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
+TOPIC = 'gestion-de-integraciones'
+TOPIC_PARTNERCREADO = 'PartnerCreated'json
 from src.modulos.alianzas.domain.models.contrato import Contrato  # BaseModel
 from src.modulos.alianzas.infrastructure.models import ContratoRow  # DB row
 from src.modulos.alianzas.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
@@ -19,6 +21,7 @@ logger = logging.getLogger(__name__)
 PULSAR_SERVICE_URL = os.getenv('BROKER_URL', 'pulsar://localhost:6650')
 TOPIC = 'gestion-de-integraciones'
 TOPIC_PARTNERCREADO = 'PartnerCreado'
+TOPIC_REVISION_CONTRATO = 'revision-contrato'
 
 # Publisher
 class PulsarContratoPublisher:
@@ -130,10 +133,99 @@ class PulsarContratoConsumer:
             self.client.close()
             logger.info("🎧 Pulsar consumer closed")
 
+# Consumer for revision-contrato events
+class PulsarRevisionContratoConsumer:
+    def __init__(self):
+        try:
+            logger.info(f"🔌 Connecting Pulsar revision consumer to {PULSAR_SERVICE_URL}")
+            self.client = pulsar.Client(PULSAR_SERVICE_URL)
+            self.consumer = self.client.subscribe(
+                TOPIC_REVISION_CONTRATO, 
+                subscription_name='revision-contrato-sub',
+                schema=pulsar.schema.BytesSchema()
+            )
+            logger.info(f"✅ Pulsar revision consumer initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Pulsar revision consumer: {e}")
+            raise
+
+    def listen(self):
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            logger.info(f"📡 Subscribed to topic: {TOPIC_REVISION_CONTRATO}")
+
+            while True:
+                logger.info("⏳ Waiting for revision-contrato messages...")
+                msg = self.consumer.receive()
+                try:
+                    logger.info(f"📨 Revision message received, processing...")
+                    content = msg.data().decode('utf-8')
+                    
+                    # Parse the revision event
+                    try:
+                        data = json.loads(content)
+                        partner_id = data.get("partner_id")
+                        comentarios_revision = data.get("comentarios_revision", "Contrato requires revision")
+                        
+                        logger.info(f"🔄 Processing revision for partner: {partner_id}")
+                        logger.info(f"📝 Revision comments: {comentarios_revision}")
+                        
+                    except json.JSONDecodeError:
+                        logger.error(f"❌ Invalid JSON in revision message: {content}")
+                        self.consumer.negative_acknowledge(msg)
+                        continue
+                    
+                    if not partner_id:
+                        logger.error(f"❌ No partner_id found in revision message: {content}")
+                        self.consumer.negative_acknowledge(msg)
+                        continue
+                    
+                    # Process the revision using the use case
+                    from src.modulos.alianzas.domain.use_cases.process_revision_contrato_use_case import ProcessRevisionContratoUseCase
+                    from src.modulos.alianzas.infrastructure.contrato_repository import ContratoRepository
+                    from src.modulos.alianzas.infrastructure.db import get_session
+                    
+                    # Get database session and repository
+                    session = await get_session()
+                    repository = ContratoRepository(session)
+                    use_case = ProcessRevisionContratoUseCase(repository)
+                    
+                    # Execute the use case
+                    result = await use_case.execute(partner_id, comentarios_revision)
+                    
+                    if result:
+                        logger.info(f'✅ Contract revision processed successfully for partner: {partner_id}')
+                        logger.info(f'📄 Contract {result.id} updated to estado: {result.estado}')
+                    else:
+                        logger.warning(f'⚠️ No contract found for partner: {partner_id}')
+
+                    self.consumer.acknowledge(msg)
+                    await session.close()
+                    
+                except Exception as e:
+                    logger.error(f'❌ Error processing revision message: {e}')
+                    self.consumer.negative_acknowledge(msg)
+                    if 'session' in locals():
+                        await session.close()
+                    
+        except Exception as e:
+            logger.error(f'💥 Fatal error in revision consumer loop: {e}')
+            raise
+
+    def close(self):
+        if hasattr(self, 'client'):
+            self.client.close()
+            logger.info("🎧 Pulsar revision consumer closed")
+
+
 # Example usage (uncomment to run)
 # db_adapter = ContratoPostgresAdapter()
 # consumer = PulsarContratoConsumer(db_adapter)
 # consumer.listen()
+
+# revision_consumer = PulsarRevisionContratoConsumer()
+# revision_consumer.listen()
 
 # publisher = PulsarContratoPublisher()
 # contrato = Contrato(...)

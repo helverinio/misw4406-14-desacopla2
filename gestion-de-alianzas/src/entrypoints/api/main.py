@@ -7,6 +7,7 @@ from src.exceptions import setup_exception_handlers
 from src.config import Settings
 from src.entrypoints.api.routers.contrato_router import router as contrato_router
 from src.modulos.alianzas.infrastructure.pulsar_integration import PulsarContratoConsumer, PulsarContratoPublisher
+from src.modulos.alianzas.infrastructure.revision_contrato_consumer import RevisionContratoConsumer
 from src.modulos.alianzas.adapters.postgres.contrato_postgres_adapter import PostgresContratoRepository
 from src.modulos.sagas.infraestructura.saga_integration import iniciar_saga_integration, detener_saga_integration
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 publisher = None
 consumer_thread = None
+revision_consumer_thread = None
 
 def run_consumer():
     try:
@@ -23,6 +25,13 @@ def run_consumer():
         consumer.listen()
     except Exception as e:
         logger.error(f"❌ Error in consumer: {e}")
+
+def run_revision_consumer():
+    try:
+        consumer = RevisionContratoConsumer()
+        consumer.start_listening()
+    except Exception as e:
+        logger.error(f"❌ Error in revision consumer: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +47,12 @@ async def lifespan(app: FastAPI):
     consumer_thread = threading.Thread(target=run_consumer, daemon=True)
     consumer_thread.start()
     logger.info("✅ Consumer de Pulsar iniciado correctamente")
+    
+    # Iniciar revision consumer en thread separado
+    global revision_consumer_thread
+    revision_consumer_thread = threading.Thread(target=run_revision_consumer, daemon=True)
+    revision_consumer_thread.start()
+    logger.info("✅ Revision Consumer de Pulsar iniciado correctamente")
     
     # Iniciar saga listener
     try:

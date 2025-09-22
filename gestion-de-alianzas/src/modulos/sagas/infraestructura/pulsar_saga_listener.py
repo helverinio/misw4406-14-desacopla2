@@ -119,7 +119,7 @@ class PulsarSagaChoreographyListener:
                 raise ValueError(f"No se pudo crear evento para topic {topic} con contenido: {content}")
                 
         except Exception as e:
-            logger.error(f"❌ Error processing message from topic {topic}: {e}")
+            logger.error(f"Error processing message from topic {topic}")
             raise
 
 
@@ -334,7 +334,7 @@ class PulsarSagaChoreographyListener:
             )
             
         except Exception as e:
-            logger.error(f"❌ Error processing RevisionContrato message: {e}")
+            #logger.error(f"❌ Error processing RevisionContrato message: {e}")
             raise
     
     def listen_topic(self, topic: str):
@@ -369,11 +369,11 @@ class PulsarSagaChoreographyListener:
                     logger.info(f"✅ Successfully processed event from topic {topic}")
                     
                 except Exception as e:
-                    logger.error(f'❌ Error processing message from topic {topic}: {e}')
+                    logger.error(f'Error processing message from topic {topic}')
                     consumer.negative_acknowledge(msg)
                     
         except Exception as e:
-            logger.error(f'💥 Fatal error in listener for topic {topic}: {e}')
+            logger.error(f'Fatal error in listener for topic {topic}')
             raise
     
     def _handle_contrato_aprobado(self, evento: ContratoAprobado):
