@@ -141,9 +141,16 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         try:
             partner_id = getattr(evento, 'partner_id', 'unknown')
             
-            # Registrar evento en el estado de la saga
+            # Solo iniciar la saga si es el evento CreatePartner
             if partner_id not in self.estado_saga:
-                self.iniciar(partner_id)
+                if isinstance(evento, CreatePartner):
+                    self.iniciar(partner_id)
+                    logger.info(f"🚀 Saga iniciada por CreatePartner para partner: {partner_id}")
+                else:
+                    # Si no existe saga y no es CreatePartner, es un error
+                    logger.warning(f"⚠️ Evento {type(evento).__name__} recibido sin saga iniciada para partner: {partner_id}")
+                    logger.warning(f"🔄 Iniciando saga de emergencia para continuar el flujo")
+                    self.iniciar(partner_id)
             
             saga_id = self.estado_saga[partner_id].get('saga_id')
             self.estado_saga[partner_id]['eventos'].append(type(evento).__name__)
