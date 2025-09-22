@@ -11,9 +11,6 @@ project_dir = os.path.dirname(src_dir)
 # Agregar src al path para poder importar módulos
 sys.path.insert(0, src_dir)
 
-# Configurar URL de base de datos para script local
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres_user:1234@localhost:5435/gestion_alianzas"
-
 print("Current dir:", current_dir)
 print("Src dir:", src_dir)
 print("Project dir:", project_dir)
@@ -42,54 +39,6 @@ try:
 except Exception as e:
     print(f"❌ Error importing saga models: {e}")
     print("Continuing without saga models...")
-
-async def main():
-    print("\nStarting table creation...")
-    async with engine.begin() as conn:
-        # Útil para depurar: ver qué tablas conoce el metadata
-        def _debug(_conn):
-            tables = list(Base.metadata.tables.keys())
-            print(f"Tablas registradas ({len(tables)}): {tables}")
-            for table_name, table in Base.metadata.tables.items():
-                print(f"  - {table_name}: {[col.name for col in table.columns]}")
-        
-        await conn.run_sync(_debug)
-        
-        print("\nCreating tables...")
-        await conn.run_sync(Base.metadata.create_all)
-        print("✅ Tables created successfully!")
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"❌ Error running script: {e}")
-        import traceback
-        traceback.print_exc()
-
-async def main():
-    print("\nStarting table creation...")
-    async with engine.begin() as conn:
-        # Útil para depurar: ver qué tablas conoce el metadata
-        def _debug(_conn):
-            tables = list(Base.metadata.tables.keys())
-            print(f"Tablas registradas ({len(tables)}): {tables}")
-            for table_name, table in Base.metadata.tables.items():
-                print(f"  - {table_name}: {[col.name for col in table.columns]}")
-        
-        await conn.run_sync(_debug)
-        
-        print("\nCreating tables...")
-        await conn.run_sync(Base.metadata.create_all)
-        print("✅ Tables created successfully!")
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"❌ Error running script: {e}")
-        import traceback
-        traceback.print_exc()
 
 async def main():
     print("\nStarting table creation...")

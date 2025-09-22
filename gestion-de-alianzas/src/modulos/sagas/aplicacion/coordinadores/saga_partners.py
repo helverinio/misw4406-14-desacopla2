@@ -16,7 +16,7 @@ from seedwork.aplicacion.comandos import Comando
 from seedwork.dominio.eventos import EventoDominio
 
 # Importar eventos específicos de partners y contratos
-from modulos.sagas.dominio.eventos import (
+from src.modulos.sagas.dominio.eventos import (
     CreatePartner, PartnerCreated, PartnerCreationFailed,
     ContratoCreado, ContratoCreadoFailed,
     ContratoAprobado, ContratoRechazado, RevisionContrato

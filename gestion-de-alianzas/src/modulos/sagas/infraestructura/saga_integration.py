@@ -9,7 +9,7 @@ import os
 # Agregar paths para imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
-from modulos.sagas.infraestructura.pulsar_saga_listener import PulsarSagaChoreographyListener
+from src.modulos.sagas.infraestructura.pulsar_saga_listener import PulsarSagaChoreographyListener
 
 logger = logging.getLogger(__name__)
 
