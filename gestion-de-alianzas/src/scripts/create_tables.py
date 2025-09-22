@@ -12,7 +12,7 @@ project_dir = os.path.dirname(src_dir)
 sys.path.insert(0, src_dir)
 
 # Configurar URL de base de datos para script local
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres_user:1234@localhost:5435/gestion_alianzas"
+os.environ["DATABASE_URL"] = os.environ.get("DATABASE_URL")
 
 print("Current dir:", current_dir)
 print("Src dir:", src_dir)
