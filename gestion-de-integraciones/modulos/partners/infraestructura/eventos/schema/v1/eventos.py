@@ -63,7 +63,20 @@ class IntegracionRevocadaPayload(Record):
     nombre = String()
     motivo = String(required=False)
 
+class CrearPartnerPayload(Record):
+    """Payload para eventos de creación de partner"""	
+    nombre = String()
+    email = String()
+    telefono = String(required=False)
+    direccion = String(required=False)
+
 # Eventos de integración específicos
+class ComandoCrearPartner(EventoIntegracion):
+    data = CrearPartnerPayload()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 class EventoPartnerCreado(EventoIntegracion):
     data = PartnerCreadoPayload()
     
