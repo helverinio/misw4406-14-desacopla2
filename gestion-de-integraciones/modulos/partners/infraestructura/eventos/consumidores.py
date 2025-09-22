@@ -1,6 +1,6 @@
 import pulsar
 import _pulsar
-from pulsar.schema import AvroSchema
+from pulsar.schema import AvroSchema, JsonSchema
 import logging
 import traceback
 import os
@@ -66,6 +66,21 @@ class ConsumidorEventos:
 
     def _crear_consumidor(self, topico, schema_class, subscription_name):
         """Crea un consumidor para un tópico específico"""
+        return ConsumidorEventos(topico, schema_class, procesador)
+
+
+class ConsumidorEventos:
+    """Consumidor de eventos para Partners usando Pulsar"""
+
+    def __init__(self, topico, schema_class, procesador=None):
+        self.cliente = None
+        self.topico = topico
+        self.procesador = procesador
+        self.subscription_name = f"gestion-integraciones.{topico}.{uuid4()}"
+        self.schema_class = schema_class
+
+    def _crear_consumidor(self, topico, schema_class, subscription_name):
+        """Crea un consumidor para un tópico específico con manejo de esquemas"""
         if not self.cliente:
             self.cliente = pulsar.Client(broker_url())
 

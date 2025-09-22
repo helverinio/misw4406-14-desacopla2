@@ -55,7 +55,7 @@ class DespachadorEventosPartner:
         # Determinar el tópico basado en el tipo de evento si no se especifica
         if topico is None:
             topico_map = {
-                'PartnerCreado': 'eventos-partners-creado',
+                'PartnerCreado': 'PartnerCreado',
                 'PartnerActualizado': 'eventos-partners-actualizado',
                 'PartnerEliminado': 'eventos-partners-eliminado',
                 'KYCVerificado': 'eventos-kyc-verificado',
@@ -65,6 +65,7 @@ class DespachadorEventosPartner:
             topico = topico_map.get(evento.__class__.__name__, 'eventos-partners-general')
             
         try:
+            print(f"🌐 Publicando evento '{evento.__class__.__name__}' en tópico '{topico}'")
             evento_integracion = self.mapper.entidad_a_dto(evento)
             self._publicar_mensaje(evento_integracion, topico, AvroSchema(evento_integracion.__class__))
             return True  # Return True to indicate successful publication

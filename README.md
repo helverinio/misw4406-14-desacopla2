@@ -82,6 +82,30 @@ graph LR
 }
 ```
 
+## Decisión sobre Eventos y Esquemas
+
+En este proyecto se optó por utilizar **eventos de integración con carga mínima de estado** en lugar de eventos con el estado completo de la entidad. Esta decisión se tomó para reducir el acoplamiento entre microservicios y facilitar la evolución independiente de cada contexto, permitiendo que cada servicio mantenga su propio modelo de datos y lógica de negocio. Los eventos transportan únicamente la información relevante para la integración, evitando exponer detalles internos innecesarios.
+
+Para la serialización de eventos, se eligió **JSON** como formato inicial por su simplicidad, legibilidad y facilidad de integración con herramientas de desarrollo y debugging. Aunque tecnologías como **Avro** o **Protobuf** ofrecen ventajas en validación de esquemas y eficiencia, se consideró que para esta primera entrega la flexibilidad y rapidez de desarrollo de JSON es más conveniente. Sin embargo, la arquitectura está preparada para migrar a Avro o Protobuf en futuras iteraciones, especialmente si se requiere mayor performance, validación estricta o compatibilidad con un Schema Registry.
+
+Respecto al **versionado de eventos (Event Stream Versioning)**, se sigue una estrategia de evolución controlada: los eventos incluyen un campo de versión y se documentan los cambios en los esquemas. Esto permite que los consumidores puedan adaptarse progresivamente a nuevas versiones sin romper la compatibilidad, facilitando la evolución del sistema a medida que crecen los requerimientos de negocio.
+
+## TODO - diseño de los esquemas
+
+---
+
+## Patrones de Almacenamiento: CRUD vs Event Sourcing
+
+Para el almacenamiento de datos en los microservicios, se ha optado por una estrategia híbrida que combina el modelo clásico **CRUD** y el patrón **Event Sourcing**, seleccionando el más adecuado según las necesidades de cada contexto.
+
+- En los servicios de **Gestión de Integraciones** y **Compliance**, se utiliza un modelo CRUD tradicional, ya que estos dominios requieren operaciones directas y simples sobre los datos, priorizando la eficiencia en consultas y la facilidad de integración con herramientas estándar de bases de datos relacionales.
+
+- En el servicio de **Gestión de Alianzas**, se está explorando el uso de Event Sourcing para el manejo de contratos, permitiendo registrar cada cambio como un evento inmutable. Esto facilita la trazabilidad, auditoría y reconstrucción del estado de los contratos a lo largo del tiempo, lo cual es valioso en escenarios donde la historia de cambios es crítica.
+
+Esta combinación permite aprovechar las ventajas de ambos enfoques: la simplicidad y rendimiento del CRUD donde es suficiente, y la potencia de Event Sourcing donde la trazabilidad y la evolución del dominio lo requieren.
+
+---
+
 ### 2. Patrones de Almacenamiento 
 
 **Modelo Híbrido Implementado**:
@@ -296,3 +320,27 @@ class PartnerCreado:
 [entrega 4 desacoplados](https://youtu.be/u21-_RgLSeY)
 
 
+### Entrega 5
+
+#### Activar Infraestructura
+
+  ### Crear red para los servicios
+  docker network create misw4406-14-desacopla2_default
+
+  ##### Iniciar Apache Pulsar
+  docker-compose -f docker-compose.pulsar.yml up
+
+ ##### Gestión de Integraciones
+ docker-compose up --build
+ database: 5434
+ servicio: 5001
+
+##### Gestión de Alianzas
+ docker-compose up --build
+ database: 5435
+ servicio: 5001
+
+##### Compliance
+ docker-compose up --build
+ database: 5436
+ servicio: 5004
