@@ -19,7 +19,10 @@ from .contrato_eventos import (
     ContratoActualizado,
     ContratoTerminado,
     ContratoSuspendido,
-    ContratoReactivado
+    ContratoReactivado,
+    ContratoAprobado,
+    ContratoRechazado,
+    RevisionContrato
 )
 
 # Exportar todos los eventos para facilitar importación
@@ -37,5 +40,8 @@ __all__ = [
     'ContratoActualizado',
     'ContratoTerminado',
     'ContratoSuspendido',
-    'ContratoReactivado'
+    'ContratoReactivado',
+    'ContratoAprobado',
+    'ContratoRechazado',
+    'RevisionContrato'
 ]

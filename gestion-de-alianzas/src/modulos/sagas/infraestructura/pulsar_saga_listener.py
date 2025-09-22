@@ -77,7 +77,6 @@ class PulsarSagaChoreographyListener:
             'ContratoCreado': ContratoCreado,
             'contrato-aprobado': ContratoAprobado,   # Nuevo: resultado de compliance
             'contrato-rechazado': ContratoRechazado, # Nuevo: rechazo de compliance
-            # Puedes agregar más topics aquí para otros eventos
         }
         
         self.subscription_prefix = 'saga-choreography'

@@ -87,3 +87,57 @@ class ContratoReactivado(EventoDominio):
     
     def __post_init__(self):
         self._id = self.siguiente_id()
+
+
+# Eventos de Compliance y Revisión
+@dataclass
+class ContratoAprobado(EventoDominio):
+    """Evento que se dispara cuando un contrato ha sido aprobado por compliance"""
+    partner_id: str = ""
+    contrato_id: str = ""
+    monto: float = 0.0
+    moneda: str = "USD"
+    estado: str = "APROBADO"
+    tipo: str = "STANDARD"
+    fecha_aprobacion: str = ""
+    validaciones_pasadas: list = None
+    
+    def __post_init__(self):
+        self._id = self.siguiente_id()
+        if self.validaciones_pasadas is None:
+            self.validaciones_pasadas = []
+
+
+@dataclass
+class ContratoRechazado(EventoDominio):
+    """Evento que se dispara cuando un contrato ha sido rechazado por compliance"""
+    partner_id: str = ""
+    contrato_id: str = ""
+    monto: float = 0.0
+    moneda: str = "USD"
+    estado: str = "RECHAZADO"
+    tipo: str = "STANDARD"
+    fecha_rechazo: str = ""
+    causa_rechazo: str = ""
+    validacion_fallida: str = ""
+    
+    def __post_init__(self):
+        self._id = self.siguiente_id()
+
+
+@dataclass
+class RevisionContrato(EventoDominio):
+    """Evento que se dispara cuando un contrato requiere revisión manual"""
+    partner_id: str = ""
+    contrato_id: str = ""
+    monto: float = 0.0
+    moneda: str = "USD"
+    estado: str = "REQUIERE_REVISION"
+    tipo: str = "STANDARD"
+    fecha_revision: str = ""
+    causa_rechazo_original: str = ""
+    validacion_fallida: str = ""
+    requiere_revision_manual: bool = True
+    
+    def __post_init__(self):
+        self._id = self.siguiente_id()

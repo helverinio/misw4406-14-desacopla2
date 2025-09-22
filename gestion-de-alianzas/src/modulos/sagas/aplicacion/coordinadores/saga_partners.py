@@ -18,7 +18,8 @@ from seedwork.dominio.eventos import EventoDominio
 # Importar eventos específicos de partners y contratos
 from modulos.sagas.dominio.eventos import (
     CreatePartner, PartnerCreated, PartnerCreationFailed,
-    ContratoCreado, ContratoCreadoFailed
+    ContratoCreado, ContratoCreadoFailed,
+    ContratoAprobado, ContratoRechazado, RevisionContrato
 )
 
 from modulos.sagas.aplicacion.servicios.saga_log_service import SagaLogService
@@ -28,11 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
-    """
-    Coordinador de saga coreográfico para el proceso de partners y contratos.
-    En coreografía, cada servicio sabe qué hacer cuando recibe un evento específico,
-    sin un coordinador central que dirija el flujo.
-    """
 
     def __init__(self, saga_log_service=None):
         self.estado_saga = {}  # Para trackear el estado de cada saga por partner_id
@@ -59,8 +55,11 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
             CreatePartner: [PartnerCreated, PartnerCreationFailed],
             PartnerCreated: [ContratoCreado, ContratoCreadoFailed],
             PartnerCreationFailed: [],  # Fin de saga en caso de error
-            ContratoCreado: [],  # Fin exitoso de saga
-            ContratoCreadoFailed: []  # Fin de saga en caso de error
+            ContratoCreado: [ContratoAprobado, ContratoRechazado],  # Compliance después del contrato
+            ContratoCreadoFailed: [],  # Fin de saga en caso de error
+            ContratoAprobado: [],  # Fin exitoso de saga - contrato aprobado
+            ContratoRechazado: [RevisionContrato],  # Si se rechaza, se puede revisar
+            RevisionContrato: []  # Fin de saga - pendiente de revisión manual
         }
         logger.info("� Initialized choreography rules for partner-contract saga")
 
@@ -201,6 +200,15 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         elif isinstance(evento, ContratoCreadoFailed):
             self._procesar_contrato_creado_failed(evento)
             
+        elif isinstance(evento, ContratoAprobado):
+            self._procesar_contrato_aprobado(evento)
+            
+        elif isinstance(evento, ContratoRechazado):
+            self._procesar_contrato_rechazado(evento)
+            
+        elif isinstance(evento, RevisionContrato):
+            self._procesar_revision_contrato(evento)
+            
         else:
             logger.warning(f"⚠️  Unknown event type in choreographic saga: {type(evento).__name__}")
 
@@ -232,12 +240,11 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
     def _procesar_contrato_creado(self, evento: ContratoCreado):
         """
         Procesa evento ContratoCreado - contrato creado exitosamente
+        Ahora pasa a compliance para validación
         """
         logger.info(f"✅ [CHOREOGRAPHY] ContratoCreado received for partner: {evento.partner_id}")
         logger.info(f"📄 Contract ID: {evento.contrato_id}, Amount: {evento.monto} {evento.moneda}")
-        logger.info("🎉 Saga completed successfully!")
-        
-        self.terminar(evento.partner_id, exitoso=True)
+        logger.info("⏭️  Next expected: ContratoAprobado or ContratoRechazado (from compliance)")
 
     def _procesar_contrato_creado_failed(self, evento: ContratoCreadoFailed):
         """
@@ -249,6 +256,37 @@ class CoordinadorPartnersCoreografico(CoordinadorCoreografia):
         logger.info("🔚 Saga terminates due to contract creation failure")
         
         self.terminar(evento.partner_id, exitoso=False)
+
+    def _procesar_contrato_aprobado(self, evento: ContratoAprobado):
+        """
+        Procesa evento ContratoAprobado - contrato aprobado por compliance
+        """
+        logger.info(f"✅ [CHOREOGRAPHY] ContratoAprobado received for partner: {evento.partner_id}")
+        logger.info(f"📄 Contract ID: {evento.contrato_id}")
+        logger.info(f"🔍 Compliance validation passed")
+        logger.info("🎉 Saga completed successfully!")
+        
+        self.terminar(evento.partner_id, exitoso=True)
+
+    def _procesar_contrato_rechazado(self, evento: ContratoRechazado):
+        """
+        Procesa evento ContratoRechazado - contrato rechazado por compliance
+        """
+        logger.error(f"❌ [CHOREOGRAPHY] ContratoRechazado for partner: {evento.partner_id}")
+        logger.error(f"📄 Contract ID: {evento.contrato_id}")
+        logger.error(f"🔍 Compliance rejection reason: {evento.razon_rechazo}")
+        logger.info("🔚 Saga terminates due to compliance rejection")
+        
+        self.terminar(evento.partner_id, exitoso=False)
+
+    def _procesar_revision_contrato(self, evento: RevisionContrato):
+        """
+        Procesa evento RevisionContrato - contrato necesita revisión
+        """
+        logger.warning(f"⚠️ [CHOREOGRAPHY] RevisionContrato for partner: {evento.partner_id}")
+        logger.warning(f"📄 Contract ID: {evento.contrato_id}")
+        logger.warning(f"🔍 Revision required: {evento.comentarios_revision}")
+        logger.info("⏭️ Next expected: ContratoAprobado or ContratoRechazado (after revision)")
 
     def obtener_estado_saga(self, partner_id: str) -> dict:
         """
