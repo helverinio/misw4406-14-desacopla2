@@ -115,7 +115,7 @@ class PulsarSagaChoreographyListener:
                 raise ValueError(f"No se pudo crear evento para topic {topic} con contenido: {content}")
                 
         except Exception as e:
-            logger.error(f"Error processing message from topic {topic}")
+            logger.error(f"Error processing message from topic {topic}; error: {e}")
             raise
 
 
@@ -309,7 +309,7 @@ class PulsarSagaChoreographyListener:
             data = json.loads(content)
             logger.info(f"🔄 Revision contrato data parsed: {data}")
             
-            return RevisionContrato(
+            evento = RevisionContrato(
                 partner_id=data.get('partner_id', ''),
                 contrato_id=data.get('contrato_id', 'unknown'),
                 monto=data.get('monto', 0.0),
@@ -319,12 +319,14 @@ class PulsarSagaChoreographyListener:
                 fecha_revision=data.get('fecha_revision', ''),
                 causa_rechazo_original=data.get('causa_rechazo_original', ''),
                 validacion_fallida=data.get('validacion_fallida', ''),
-                requiere_revision_manual=data.get('requiere_revision_manual', True),
-                comentarios_revision=data.get('causa_rechazo_original', '')  # Usar causa como comentario
+                requiere_revision_manual=data.get('requiere_revision_manual', True)
             )
             
+            logger.info(f"✅ RevisionContrato event created successfully: {type(evento).__name__} for partner {evento.partner_id}")
+            return evento
+            
         except Exception as e:
-            #logger.error(f"❌ Error processing RevisionContrato message: {e}")
+            logger.error(f"❌ Error processing RevisionContrato message: {e}")
             raise
     
     def listen_topic(self, topic: str):
@@ -359,7 +361,7 @@ class PulsarSagaChoreographyListener:
                     logger.info(f"✅ Successfully processed event from topic {topic}")
                     
                 except Exception as e:
-                    logger.error(f'Error processing message from topic {topic}')
+                    logger.error(f'Error processing message from topic {topic}: {e}')
                     consumer.negative_acknowledge(msg)
                     
         except Exception as e:
@@ -438,12 +440,19 @@ class PulsarSagaChoreographyListener:
     def _handle_revision_contrato(self, evento: RevisionContrato):
         """Maneja eventos de revisión de contrato - registra la revisión pendiente"""
         try:
+            logger.info(f"🔄 Handling RevisionContrato event. Type: {type(evento)}, Partner: {evento.partner_id}")
             logger.info(f"🔄 Contrato en REVISIÓN para partner {evento.partner_id}")
             logger.info(f"📋 Detalles: Contrato {evento.contrato_id}, Monto: {evento.monto} {evento.moneda}")
             logger.info(f"⚠️ Causa revisión: {evento.causa_rechazo_original}")
             logger.info(f"🔍 Validación que falló: {evento.validacion_fallida}")
             
+            # Validar que el evento es del tipo correcto
+            if not isinstance(evento, RevisionContrato):
+                logger.error(f"💥 Expected RevisionContrato but got {type(evento)}: {evento}")
+                raise ValueError(f"Expected RevisionContrato event, got {type(evento)}")
+            
             # Procesar en la saga para registrar la revisión
+            logger.info(f"🎯 Calling coordinador.procesar_evento with {type(evento).__name__}")
             self.coordinador.procesar_evento(evento)
             logger.info(f"⏳ Saga mantiene estado de revisión pendiente para partner {evento.partner_id}")
             logger.info(f"📝 Esperando resolución de revisión manual...")

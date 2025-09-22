@@ -94,6 +94,15 @@ class PulsarContratoConsumer:
                     estados = list(EstadoContrato)
                     monedas = ["USD", "EUR", "COP", "MXN"]
                     condiciones_list = ["Condición A", "Condición B", "Condición C", "Condición D"]
+                    
+                    # Lógica para estado: 80% ACTIVO, 20% aleatorio entre otros estados
+                    if random.random() < 0.8:
+                        estado_contrato = EstadoContrato.ACTIVO
+                    else:
+                        # Obtener todos los estados excepto ACTIVO para el 20% restante
+                        otros_estados = [estado for estado in estados if estado != EstadoContrato.ACTIVO]
+                        estado_contrato = random.choice(otros_estados)
+                    
                     contrato = Contrato(
                         partner_id=partner_id,
                         tipo=random.choice(tipos),
@@ -102,7 +111,7 @@ class PulsarContratoConsumer:
                         monto=round(random.uniform(100, 10000), 2),
                         moneda=random.choice(monedas),
                         condiciones=random.choice(condiciones_list),
-                        estado=random.choice(estados),
+                        estado=estado_contrato,
                         fecha_creacion=datetime.utcnow(),
                         fecha_actualizacion=None
                     )
