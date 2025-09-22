@@ -1,96 +1,578 @@
 {
 	"info": {
-		"_postman_id": "c8554f14-85bc-45a6-a212-90633dd53b3d",
+		"_postman_id": "73e11a04-0347-4fd6-9e1d-55d29a74d184",
 		"name": "AlpesPartners",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "43911642",
-		"_collection_link": "https://helvertwiesner.postman.co/workspace/Culturas-Gastronomicas~61d475be-254a-4229-9947-107ccc7370f1/collection/43911642-c8554f14-85bc-45a6-a212-90633dd53b3d?action=share&source=collection_link&creator=43911642"
+		"_exporter_id": "43547055"
 	},
 	"item": [
 		{
-			"name": "spec",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{alpespartners}}/spec",
-					"host": [
-						"{{alpespartners}}"
-					],
-					"path": [
-						"spec"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "health",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{alpespartners}}/health",
-					"host": [
-						"{{alpespartners}}"
-					],
-					"path": [
-						"health"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "get Programa",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{alpespartners}}/programas/65c89b76-97e2-45f0-a62c-13e8e68f0816",
-					"host": [
-						"{{alpespartners}}"
-					],
-					"path": [
-						"programas",
-						"65c89b76-97e2-45f0-a62c-13e8e68f0816"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "post Programa",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"programa_id\": \"e7b8c2e2-9c2a-4f7e-bb8e-1a2b3c4d5e6f\",\r\n  \"estado\": \"ACTIVO\",\r\n  \"tipo\": \"AFILIADOS\",\r\n  \"brand_id\": \"a1b2c3d4-5678-1234-5678-abcdefabcdef\",\r\n  \"vigencia_inicio\": \"2025-09-01\",\r\n  \"vigencia_fin\": \"2026-09-01\",\r\n  \"term_modelo\": \"CPA\",\r\n  \"term_moneda\": \"COP\",\r\n  \"term_tarifa_base\": 1000.00,\r\n  \"term_tope\": 5000.00,\r\n  \"afiliaciones\": [\r\n    {\r\n      \"afiliacion_id\": \"f1e2d3c4-b5a6-7890-1234-abcdefabcdef\",\r\n      \"afiliado_id\": \"c1d2e3f4-5678-1234-5678-abcdefabcdef\",\r\n      \"estado\": \"ACTIVA\",\r\n      \"fecha_alta\": \"2025-09-05\",\r\n      \"fecha_baja\": null\r\n    }\r\n  ]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+			"name": "partners-bff",
+			"item": [
+				{
+					"name": "/ping",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PARTNERS_BFF_URL}}/ping",
+							"host": [
+								"{{PARTNERS_BFF_URL}}"
+							],
+							"path": [
+								"ping"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "{{alpespartners}}/programa",
-					"host": [
-						"{{alpespartners}}"
-					],
-					"path": [
-						"programa"
-					]
+				{
+					"name": "/partners",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PARTNERS_BFF_URL}}/api/v1/partners",
+							"host": [
+								"{{PARTNERS_BFF_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"carlos\",\r\n    \"email\": \"carlos@gmail.com\",\r\n    \"telefono\": \"1234455678\",\r\n    \"direccion\": \"cra 7\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{PARTNERS_BFF_URL}}/api/v1/partners",
+							"host": [
+								"{{PARTNERS_BFF_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
+		},
+		{
+			"name": "gestion-de-integraciones",
+			"item": [
+				{
+					"name": "/health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/health",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"jose\",\r\n    \"email\": \"jose@gmail.com\",\r\n    \"telefono\": \"1234455678\",\r\n    \"direccion\": \"cra 7\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners//:id",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								"",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "48fa6828-1ad6-4a4f-9cea-7a6b22af6e51"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"jose\",\r\n    \"email\": \"jose@gmail.com\",\r\n    \"telefono\": \"1234455678\",\r\n    \"direccion\": \"cra 7\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners//:id",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								"",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners/:id",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id/kyc",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"estado_kyc\": \"APROBADO\",\r\n    \"documentos\": {}, \r\n    \"comentarios\": \"Comentario\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners/:id/kyc",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								":id",
+								"kyc"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id/integraciones",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"tipo\": \"API\",\r\n    \"nombre\": \"Google Ads\", \r\n    \"descripcion\": \"Cuenta de Google Ads\",\r\n    \"configuracion\": {} \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners/:id/integraciones",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								":id",
+								"integraciones"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/partners/:id/integraciones",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"motivo\": \"Integracion se ha deshabilitado\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_INTEGRACIONES_URL}}/api/v1/partners/:id/revocar",
+							"host": [
+								"{{GESTION_INTEGRACIONES_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partners",
+								":id",
+								"revocar"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "compliance",
+			"item": [
+				{
+					"name": "/health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{COMPLIANCE_URL}}/health",
+							"host": [
+								"{{COMPLIANCE_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/compliance/register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"partner_id\":\"38c4463e-0666-40c8-af27-fce6345025e8\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{COMPLIANCE_URL}}/compliance/register",
+							"host": [
+								"{{COMPLIANCE_URL}}"
+							],
+							"path": [
+								"compliance",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "gestion-de-alianzas",
+			"item": [
+				{
+					"name": "/health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_ALIANZAS_URL}}/posts/ping",
+							"host": [
+								"{{GESTION_ALIANZAS_URL}}"
+							],
+							"path": [
+								"posts",
+								"ping"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/contratos",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_ALIANZAS_URL}}/posts",
+							"host": [
+								"{{GESTION_ALIANZAS_URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "gestion-de-programas",
+			"item": [
+				{
+					"name": "/spec",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_PROGRAMAS_URL}}/spec",
+							"host": [
+								"{{GESTION_PROGRAMAS_URL}}"
+							],
+							"path": [
+								"spec"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{alpespartners}}/health",
+							"host": [
+								"{{alpespartners}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/programas/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GESTION_PROGRAMAS_URL}}/programas/:id",
+							"host": [
+								"{{GESTION_PROGRAMAS_URL}}"
+							],
+							"path": [
+								"programas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72f497df-4a1f-4673-aeb6-5eea4e1e1978"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/programas",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"programa_id\": \"e7b8c2e2-9c2a-4f7e-bb8e-1a2b3c4d5e6f\",\r\n  \"estado\": \"ACTIVO\",\r\n  \"tipo\": \"AFILIADOS\",\r\n  \"brand_id\": \"a1b2c3d4-5678-1234-5678-abcdefabcdef\",\r\n  \"vigencia_inicio\": \"2025-09-01\",\r\n  \"vigencia_fin\": \"2026-09-01\",\r\n  \"term_modelo\": \"CPA\",\r\n  \"term_moneda\": \"COP\",\r\n  \"term_tarifa_base\": 1000.00,\r\n  \"term_tope\": 5000.00,\r\n  \"afiliaciones\": [\r\n    {\r\n      \"afiliacion_id\": \"f1e2d3c4-b5a6-7890-1234-abcdefabcdef\",\r\n      \"afiliado_id\": \"c1d2e3f4-5678-1234-5678-abcdefabcdef\",\r\n      \"estado\": \"ACTIVA\",\r\n      \"fecha_alta\": \"2025-09-05\",\r\n      \"fecha_baja\": null\r\n    }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GESTION_PROGRAMAS_URL}}/programas",
+							"host": [
+								"{{GESTION_PROGRAMAS_URL}}"
+							],
+							"path": [
+								"programas"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
 		{
-			"key": "alpespartners",
-			"value": "http://localhost:5000",
-			"type": "default"
+			"key": "GESTION_PROGRAMAS_URL",
+			"value": "http://35.244.216.199"
+		},
+		{
+			"key": "GESTION_INTEGRACIONES_URL",
+			"value": "http://34.111.239.116"
+		},
+		{
+			"key": "GESTION_ALIANZAS_URL",
+			"value": "http://34.144.243.152"
+		},
+		{
+			"key": "COMPLIANCE_URL",
+			"value": "http://34.111.90.7"
+		},
+		{
+			"key": "PARTNERS_BFF_URL",
+			"value": "http://35.227.227.186"
 		}
 	]
 }
