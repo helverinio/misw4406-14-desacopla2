@@ -58,7 +58,7 @@ print_success "Namespace ready"
 
 # Deploy shared-ingress first (includes BackendConfigs)
 # print_status "Deploying shared-ingress with BackendConfigs..."
-# helm upgrade --install shared-ingress ./terraform/charts/shared-ingress \
+# helm upgrade --install shared-ingress ./helm/shared-ingress \
 #   --namespace alpespartners \
 #   --wait \
 #   --timeout=5m
@@ -72,7 +72,7 @@ print_success "Namespace ready"
 
 # Deploy campaigns service
 print_status "Deploying campaigns service..."
-helm upgrade --install campaigns-service ./terraform/charts/campaigns-service \
+helm upgrade --install campaigns-service ./helm/campaigns-service \
   --namespace alpespartners \
   --wait \
   --timeout=5m
@@ -86,7 +86,7 @@ fi
 
 # Deploy alliances service
 print_status "Deploying alliances service..."
-helm upgrade --install alliances-service ./terraform/charts/alliances-service \
+helm upgrade --install alliances-service ./helm/alliances-service \
   --namespace alpespartners \
   --wait \
   --timeout=5m
@@ -98,9 +98,23 @@ else
     exit 1
 fi
 
+# Deploy partners-bff service
+print_status "Deploying partners-bff service..."
+helm upgrade --install partners-bff ./helm/partners-bff \
+  --namespace alpespartners \
+  --wait \
+  --timeout=5m
+
+if [ $? -eq 0 ]; then
+    print_success "Partners-bff service deployed successfully"
+else
+    print_error "Failed to deploy partners-bff service"
+    exit 1
+fi
+
 # Deploy integrations service
 print_status "Deploying integrations service..."
-helm upgrade --install integrations-service ./terraform/charts/integrations-service \
+helm upgrade --install integrations-service ./helm/integrations-service \
   --namespace alpespartners \
   --wait \
   --timeout=5m
@@ -114,7 +128,7 @@ fi
 
 # Deploy compliance service
 print_status "Deploying compliance service..."
-helm upgrade --install compliance-service ./terraform/charts/compliance-service \
+helm upgrade --install compliance-service ./helm/compliance-service \
   --namespace alpespartners \
   --wait \
   --timeout=5m
@@ -170,11 +184,13 @@ if [ -n "$EXTERNAL_IP" ]; then
     echo "🎯 Available endpoints with path rewriting:"
     echo "   Campaigns:    http://$EXTERNAL_IP/campaigns/* → /*"
     echo "   Alliances:    http://$EXTERNAL_IP/alliances/* → /*"
+    echo "   Partners-BFF: http://$EXTERNAL_IP/partners-bff/* → /*"
     echo "   Integrations: http://$EXTERNAL_IP/integrations/* → /*"
     echo "   Compliance:   http://$EXTERNAL_IP/compliance/* → /*"
     echo ""
     echo "🔍 Test endpoints:"
     echo "   curl http://$EXTERNAL_IP/alliances/posts/ping"
+    echo "   curl http://$EXTERNAL_IP/partners-bff/health"
     echo "   curl http://$EXTERNAL_IP/campaigns/health"
     echo "   curl http://$EXTERNAL_IP/integrations/health"
     echo "   curl http://$EXTERNAL_IP/compliance/health"

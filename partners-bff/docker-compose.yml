@@ -1,0 +1,15 @@
+include:
+  - ../docker-compose.pulsar.yml
+services:
+  partners-bff:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile   
+    ports:
+      - "5000:8000"
+    environment:
+      INTEGRATIONS_API_URL: http://gestion-integraciones:5001
+      BROKER_URL: pulsar://broker:6650
+    depends_on:
+      - broker
+

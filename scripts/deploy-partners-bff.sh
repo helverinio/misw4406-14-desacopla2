@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Deploy campaigns-service using Helm
-# Usage: ./scripts/deploy-helm.sh [release-name] [namespace]
+# Deploy partners-bff using Helm
+# Usage: ./scripts/deploy-partners-bff.sh [release-name] [namespace]
 
 set -e
 
 # Configuration
-RELEASE_NAME=${1:-campaigns-service}
+RELEASE_NAME=${1:-partners-bff}
 NAMESPACE=${2:-alpespartners}
-CHART_PATH="helm/campaigns-service"
-VALUES_FILE="helm/campaigns-service/values.yaml"
+CHART_PATH="helm/partners-bff"
+VALUES_FILE="helm/partners-bff/values.yaml"
 
-echo "🚀 Deploying campaigns-service with Helm..."
+echo "🚀 Deploying partners-bff with Helm..."
 echo "Release: ${RELEASE_NAME}"
 echo "Namespace: ${NAMESPACE}"
 echo "Chart: ${CHART_PATH}"
@@ -59,14 +59,14 @@ else
         --create-namespace
 fi
 
-echo "✅ Successfully deployed campaigns-service!"
+echo "✅ Successfully deployed partners-bff!"
 echo ""
 echo "📊 Deployment status:"
-kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=campaigns-service
+kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/name=partners-bff
 echo ""
 echo "🌐 Ingress status:"
 kubectl get ingress -n ${NAMESPACE}
 echo ""
 echo "🔗 Your application should be accessible at:"
-echo "   http://<STATIC_IP>/campaigns"
+echo "   http://<STATIC_IP>/partners-bff"
 echo "   (Get the static IP with: kubectl get ingress alpespartners-api-ingress -n ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
