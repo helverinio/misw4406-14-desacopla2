@@ -11,9 +11,6 @@ project_dir = os.path.dirname(src_dir)
 # Agregar src al path para poder importar módulos
 sys.path.insert(0, src_dir)
 
-# Configurar URL de base de datos para script local
-os.environ["DATABASE_URL"] = os.environ.get("DATABASE_URL")
-
 print("Current dir:", current_dir)
 print("Src dir:", src_dir)
 print("Project dir:", project_dir)
